@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;font-family:sy
   <div id="chars" style="display:none"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>const BUILD="1795710104";(function(){if(!/^https?:/.test(location.protocol))return;fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);}}).catch(()=>{});})();</script>
+<script>const BUILD="1795711799";(function(){if(!/^https?:/.test(location.protocol))return;fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);}}).catch(()=>{});})();</script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -753,15 +753,16 @@ function onPeers(p){const list=peerList(p),seen={};list.forEach(st=>{seen[st.sid
   if((st.nick||null)!==o.nick){o.nick=st.nick||null;try{const u=o.av.userData,c=Object.assign({},CH[clamp(st.ci|0,0,4)],st.lk||{});if(u.label){u.label.parent&&u.label.parent.remove(u.label);}u.label=labelSprite(o.nick||c.name,c.girl?'#ffb6e6':'#ffe08a');u.label.position.y=2.55;o.av.add(u.label);}catch(e){}}
   o.st=st;const sig=[st.robe,st.hat,st.scarf,st.wand].join();if(sig!==o.sig){o.sig=sig;applyOutfit(o.av,st);}
   if(st.q&&Q.wait&&(!st.q.g||st.q.g==='quid')&&((st.q.state==='wait')||(st.q.opp===SID&&st.q.state==='play')))quidStart('human',st.sid);
+  if(st.q&&typeof SWM!=='undefined'&&SWM.wait&&!SWM.on&&st.q.g==='swim'&&((st.q.state==='wait')||(st.q.opp===SID&&st.q.state==='play')))swimStart(st.sid);
   if(st.q&&PW.g&&!PW.play&&st.q.g===PW.g&&((st.q.state==='wait')||(st.q.opp===SID&&st.q.state==='play')))pongHuman(PW.g,st.sid);});
  for(const k in peers)if(!seen[k]){scene.remove(peers[k].av);delete peers[k];}
  try{invUpdate();}catch(e){}}
 
 /* ---------- game invitations: shown to everyone when a friend is waiting ---------- */
-const GNAME={tennis:'🎾 טניס',pingpong:'🏓 פינג פונג',quid:'🧹 קווידיץ׳'};
+const GNAME={tennis:'🎾 טניס',pingpong:'🏓 פינג פונג',quid:'🧹 קווידיץ׳',swim:'🏊 מרוץ שחייה'};
 function invUpdate(){let bar=document.getElementById('invBar');
  if(!bar){bar=document.createElement('div');bar.id='invBar';bar.style.cssText='position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:60;background:#2b1d6e;border:2px solid #ffd978;border-radius:16px;padding:10px 14px;color:#fff;font-size:16px;font-weight:700;display:none;align-items:center;gap:10px;max-width:92vw;box-shadow:0 6px 20px #0008;direction:rtl';document.body.appendChild(bar);}
- const busy=PP.on||Q.on||PW.play||Q.wait||PW.g;let cand=null;
+ const busy=PP.on||Q.on||PW.play||Q.wait||PW.g||(typeof SWM!=='undefined'&&(SWM.on||SWM.wait));let cand=null;
  if(!busy)for(const k in peers){const st=peers[k].st;if(st&&st.q&&st.q.state==='wait'&&GNAME[st.q.g||'quid']){cand=st;break;}}
  if(!cand){bar.style.display='none';bar.dataset.sid='';return;}
  const g=cand.q.g||'quid',nm=cand.nick||(CH[clamp(cand.ci|0,0,4)]||{}).name||'חבר';
@@ -770,7 +771,7 @@ function invUpdate(){let bar=document.getElementById('invBar');
  const t=document.createElement('span');t.textContent=nm+' רוצה לשחק '+GNAME[g];bar.appendChild(t);
  const b=document.createElement('button');b.className='btn';b.textContent='הצטרף';b.style.cssText='padding:8px 14px;font-size:16px';
  b.onclick=()=>{bar.style.display='none';if(PP.on||Q.on||PW.play)return;
-  if(g==='quid')quidStart('human',cand.sid);else{PW.g=g;PW.cfg=PCFG[g];pongHuman(g,cand.sid);}};
+  if(g==='quid')quidStart('human',cand.sid);else if(g==='swim')swimStart(cand.sid);else{PW.g=g;PW.cfg=PCFG[g];pongHuman(g,cand.sid);}};
  bar.appendChild(b);bar.style.display='flex';}
 function peersTick(dt){for(const k in peers){const o=peers[k],s=o.st,a=o.av,u=a.userData;const dx=(s.x||0)-a.position.x,dz=(s.z||0)-a.position.z;const sp=Math.hypot(dx,dz)/Math.max(dt,.001);
   a.position.x+=dx*Math.min(1,10*dt);a.position.z+=dz*Math.min(1,10*dt);a.position.y+=((s.y||0)-a.position.y)*Math.min(1,10*dt);
@@ -778,7 +779,7 @@ function peersTick(dt){for(const k in peers){const o=peers[k],s=o.st,a=o.av,u=a.
   const vid=s.veh;if(o.veh!==vid){o.veh=vid;while(u.vehG.children.length)u.vehG.remove(u.vehG.children[0]);if(vid&&BYID[vid])u.vehG.add(vehMesh(vid));}
   const rm=vid&&RIDE[vid];animAv(a,Math.min(sp,6),P.t+k.length,s.m==='swim'?'swim':(rm?rm.m:'walk'));if(rm&&rm.m==='ride')u.body.position.y=rm.y;}}
 function sendPresence(){if(!ROOM||!me)return;try{const v=quid.active?'v_broom':(P.riding?S.curVeh:null);
- ROOM.presence({sid:SID,ci:S.ch,lk:S.look||null,x:+P.x.toFixed(2),y:+P.y.toFixed(2),z:+P.z.toFixed(2),ry:+P.ry.toFixed(2),m:inPool(P.x,P.z)&&!v?'swim':'walk',veh:v,robe:S.robe,hat:S.hat,scarf:S.scarf,wand:S.wand,nick:S.nick||null,q:Q.wait?{state:'wait',g:'quid'}:(PW.play?{state:'play',opp:PW.play.opp,g:PW.play.g}:(PW.g?{state:'wait',g:PW.g}:(Q.on&&Q.opp?{state:'play',opp:Q.opp,g:'quid'}:null)))});}catch(e){}}
+ ROOM.presence({sid:SID,ci:S.ch,lk:S.look||null,x:+P.x.toFixed(2),y:+P.y.toFixed(2),z:+P.z.toFixed(2),ry:+P.ry.toFixed(2),m:inPool(P.x,P.z)&&!v?'swim':'walk',veh:v,robe:S.robe,hat:S.hat,scarf:S.scarf,wand:S.wand,nick:S.nick||null,q:(typeof SWM!=='undefined'&&SWM.q)?SWM.q:Q.wait?{state:'wait',g:'quid'}:(PW.play?{state:'play',opp:PW.play.opp,g:PW.play.g}:(PW.g?{state:'wait',g:PW.g}:(Q.on&&Q.opp?{state:'play',opp:Q.opp,g:'quid'}:null)))});}catch(e){}}
 /* ---------- quidditch ---------- */
 const Q={on:false,wait:false,mode:'bot',host:true,opp:null,team:0,sc:[0,0],t:150,ball:{x:0,y:6,z:0,vx:0,vy:0,vz:0},hold:null,pickBlock:0,stealCd:0,botCd:0,bot:null,botAv:null,ballM:null,sendT:0,over:false,last:{}};
 function quidMenu(){openPanel('🏆 קווידיץ׳',[h('div',{style:'font-size:14px;margin-bottom:8px;line-height:1.5'},['חברים מחוברים עכשיו: '+Object.keys(peers).length+'. עולים על מטאטא, תופסים את הכדור ומכניסים אותו לאחת מטבעות השער של היריב (10 נקודות). המשחק נגמר ב־50 נקודות או אחרי שתי דקות וחצי. אפשר להתקדם עם הג׳ויסטיק, ולעלות/לרדת עם החצים.']),
@@ -837,6 +838,7 @@ function quidEnd(forced){if(PP.on){ppEnd(true);return;}if(!Q.on)return;const min
  openPanel(win?'🏆 ניצחת בקווידיץ׳!':(mine===theirs?'🤝 תיקו':'😅 היריב ניצח'),[h('div',{style:'font-size:20px;margin:10px 0'},['התוצאה: '+mine+' : '+theirs]),h('div',{style:'font-size:18px'},[win?'קיבלת ₪'+reward+'!':'בפעם הבאה! אפשר לשחק שוב במגרש.'])]);}
 function setupRoom(){if(!ROOM)return;try{ROOM.onPeers(onPeers);}catch(e){}
  try{ROOM.on('qball',d=>{if(!d||d.to!==SID||!Q.on||Q.host)return;const b=Q.ball;b.x=d.x;b.y=d.y;b.z=d.z;b.vx=d.vx;b.vy=d.vy;b.vz=d.vz;Q.hold=d.hold;Q.sc=d.sc||Q.sc;Q.t=d.t;if(d.msg)toast(d.msg==='g1'?'⚽ גול! 10 נקודות לך! 🎉':'😮 היריב קלע גול!');if(d.over)quidEnd(false);});}catch(e){}
+ try{ROOM.on('swim',d=>{if(typeof swimRecv==='function')swimRecv(d);});}catch(e){}
  try{ROOM.on('pstate',d=>{if(PNET.onState)PNET.onState(d);});ROOM.on('pmove',d=>{if(PNET.onMove)PNET.onMove(d);});}catch(e){}
  try{ROOM.on('pb',d=>{if(PPNET.onState)PPNET.onState(d);});ROOM.on('ppact',d=>{if(PPNET.onAct)PPNET.onAct(d);});}catch(e){}
  try{ROOM.on('qact',d=>{if(!d||d.to!==SID||!Q.on||!Q.host||d.from!==Q.opp)return;if(d.a==='throw'&&Q.hold==='opp')throwBall('opp',{x:+d.x||0,y:+d.y||0,z:+d.z||0});});}catch(e){}
@@ -1214,6 +1216,48 @@ setInterval(()=>{if(!window.started&&typeof started==='undefined'){d.style.displ
  d.style.display='block';
  if(NET.on){const n=Object.keys(peers).length+1;d.textContent=(NET.mode==='mqtt'&&!(NET.mq&&NET.mq.connected))?'⏳ מתחבר מחדש…':'🟢 '+(NET.hub?'מארח':'מחובר')+' · '+n+' בחדר';d.style.color=n>1?'#9fffbf':'#fff';}
  else d.textContent=NET.busy?'⏳ מתחבר לחדר…':'⚪ לא מחובר לחדר';},800);})();
+</script>
+<script>
+/* ---------- swim race between friends ---------- */
+const SWM={wait:false,on:false,opp:null,q:null,t0:0,phase:'',my:null,op:null,iv:null,tm:null,fin:0,opfin:0};
+const SWX0=74.5,SWX1=94;
+function swimHud(txt){let b=document.getElementById('swHud');if(!b){b=document.createElement('div');b.id='swHud';b.style.cssText='position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:61;background:#0b3a6e;border:2px solid #7fd4ff;border-radius:16px;padding:8px 14px;color:#fff;font-size:18px;font-weight:700;display:none;align-items:center;gap:10px;max-width:92vw;direction:rtl;box-shadow:0 6px 20px #0008';
+  const t=document.createElement('span');t.id='swTxt';b.appendChild(t);const x=document.createElement('button');x.className='btn';x.textContent='✖ יציאה';x.style.cssText='padding:6px 10px;font-size:14px';x.onclick=()=>swimEnd('quit');b.appendChild(x);document.body.appendChild(b);}
+ if(txt==null){b.style.display='none';return;}document.getElementById('swTxt').textContent=txt;b.style.display='flex';}
+function swimMenu(){openPanel('🏊 מרוץ שחייה',[h('div',{style:'line-height:1.6;margin-bottom:10px'},['שחו לקצה השני של הבריכה וחזרה. מי שחוזר ראשון מנצח וזוכה ב־₪30! חברים מחוברים עכשיו: '+Object.keys(peers).length]),
+  h('button',{class:'btn',style:'width:100%;padding:12px;font-size:17px',on:swimWait},['🧑‍🤝‍🧑 חפש יריב (הזמנה לכל החברים)'])]);}
+function swimWait(){if(!ROOM){toast('מרוץ מול חבר דורש חיבור לחדר',true);return;}
+ SWM.wait=true;SWM.q={state:'wait',g:'swim'};sendPresence();
+ openPanel('⏳ מחכים ליריב…',[h('div',{style:'line-height:1.6'},['כל החברים המחוברים רואים הזמנה למרוץ. ברגע שחבר מצטרף – המרוץ מתחיל.']),h('button',{class:'btn',style:'width:100%;margin-top:8px',on:()=>{closePanel();}},['ביטול'])],()=>{if(SWM.wait&&!SWM.on)swimCancel();});
+ clearTimeout(SWM.tm);SWM.tm=setTimeout(()=>{if(SWM.wait&&!SWM.on){swimCancel();closePanel();toast('לא נמצא יריב כרגע');}},90000);}
+function swimCancel(){SWM.wait=false;if(!SWM.on)SWM.q=null;clearTimeout(SWM.tm);try{sendPresence();}catch(e){}}
+function swimStart(opp){if(SWM.on||PP.on||Q.on||PW.play)return;SWM.wait=false;clearTimeout(SWM.tm);closePanel.cb=null;$('pn').classList.remove('on');
+ if(place!=='out')leave();P.riding=false;try{setRide();}catch(e){}
+ SWM.on=true;SWM.opp=opp;SWM.my=null;SWM.op=null;SWM.phase='count';SWM.q={state:'play',opp,g:'swim'};
+ P.x=SWX0;P.z=SID<opp?25.5:30.5;P.y=-.55;P.ry=Math.PI/2;P.vx=0;P.vz=0;
+ let n=3;swimHud('מוכנים… '+n);
+ const cd=setInterval(()=>{if(!SWM.on){clearInterval(cd);return;}n--;if(n>0)swimHud('מוכנים… '+n);else{clearInterval(cd);SWM.phase='out';SWM.t0=performance.now();P.x=SWX0;swimHud('🏊 שחו!');}},1000);
+ clearInterval(SWM.iv);SWM.iv=setInterval(swimTick,50);try{sendPresence();}catch(e){}}
+function swimRecv(d){if(!d||d.to!==SID||d.from!==SWM.opp||!SWM.on)return;SWM.op=+d.time||999;SWM.opfin=Date.now();}
+function swimTick(){if(!SWM.on)return;
+ if(SWM.phase==='out'||SWM.phase==='back'){const el=(performance.now()-SWM.t0)/1000;
+  swimHud('⏱ '+el.toFixed(1)+(SWM.phase==='out'?' – שחו לקצה השני ➡️':' – ועכשיו חזרה! ⬅️'));
+  if(SWM.phase==='out'&&P.x>=SWX1)SWM.phase='back';
+  else if(SWM.phase==='back'&&P.x<=SWX0){SWM.my=el;SWM.phase='done';SWM.fin=Date.now();swimHud('סיימת ב־'+el.toFixed(1)+' שנ׳ – מחכים ליריב…');try{ROOM.emit('swim',{to:SWM.opp,from:SID,time:el});}catch(e){}}
+  if(el>120){swimEnd('timeout');return;}}
+ if(SWM.my!=null&&SWM.op!=null)swimEnd('both');
+ else if(SWM.my!=null&&Date.now()-SWM.fin>45000)swimEnd('oppslow');
+ else if(SWM.op!=null&&SWM.my==null&&Date.now()-SWM.opfin>60000)swimEnd('late');
+ else if(SWM.phase==='count'&&false){}}
+function swimEnd(why){if(!SWM.on)return;const my=SWM.my,op=SWM.op;SWM.on=false;SWM.wait=false;SWM.q=null;clearInterval(SWM.iv);swimHud(null);try{sendPresence();}catch(e){}
+ if(why==='quit'){toast('יצאת מהמרוץ');return;}
+ let title,msg;
+ if(why==='both'){if(my<op){title='🏆 ניצחת במרוץ!';msg='הזמן שלך: '+my.toFixed(1)+' · היריב: '+op.toFixed(1)+'. קיבלת ₪30!';money(30);}else if(my>op){title='😅 היריב ניצח';msg='הזמן שלך: '+my.toFixed(1)+' · היריב: '+op.toFixed(1);}else{title='🤝 תיקו';msg='שניכם סיימתם באותו זמן';}}
+ else if(why==='oppslow'){title='🏆 ניצחת במרוץ!';msg='היריב לא סיים. קיבלת ₪30!';money(30);}
+ else if(why==='late'){title='😅 היריב ניצח';msg='היריב סיים לפניך.';}
+ else{title='המרוץ הסתיים';msg='לא הצלחתם לסיים בזמן.';}
+ openPanel(title,[h('div',{style:'font-size:18px;margin:10px 0;line-height:1.6'},[msg])]);}
+zone([72,96,22,34],'🏊 מרוץ שחייה מול חבר',()=>swimMenu(),84,28);
 </script>
 <script>
 /* ---------- preview, real estate, registration, own shops ---------- */
