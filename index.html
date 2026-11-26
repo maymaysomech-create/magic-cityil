@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;font-family:sy
   <div id="chars" style="display:none"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>const BUILD="1795716584";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
+<script>const BUILD="1795717254";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -517,13 +517,13 @@ function update(dt){
  const swim=!flying&&inPool(P.x,P.z);
  const sp=quid.active?13:veh?veh.sp:swim?2.4:4.8;
  const fx=-Math.sin(cam.yaw),fz=-Math.cos(cam.yaw),rx=Math.cos(cam.yaw),rz=-Math.sin(cam.yaw);
- const mx=fx*jy+rx*jx,mz=fz*jy+rz*jx;
- const acc=veh&&!veh.fly?3.2:9;P.vx+=(mx*sp-P.vx)*Math.min(1,acc*dt);P.vz+=(mz*sp-P.vz)*Math.min(1,acc*dt);
+ let mx=fx*jy+rx*jx,mz=fz*jy+rz*jx;const brk=!!(window.BRK&&veh&&!veh.fly);if(brk){mx=mz=0;}
+ const acc=brk?16:(veh&&!veh.fly?3.2:9);P.vx+=(mx*sp-P.vx)*Math.min(1,acc*dt);P.vz+=(mz*sp-P.vz)*Math.min(1,acc*dt);
  let nx=P.x+P.vx*dt,nz=P.z+P.vz*dt;
  if(place==='out'){if(P.y<9&&!quid.active){[nx,nz]=collide(nx,nz,veh&&!veh.fly&&veh.id==='v_car'?1.1:.5);}nx=clamp(nx,-WH,WH);nz=clamp(nz,-WH,WH);if(quid.active){nx=clamp(nx,QP.cx-QP.hl-4,QP.cx+QP.hl+4);nz=clamp(nz,QP.cz-QP.hw-3,QP.cz+QP.hw+3);}if(PP.on){nx=clamp(nx,CFG.cx-CFG.xr,CFG.cx+CFG.xr);nz=PP.side>0?clamp(nz,CFG.cz+CFG.zmin,CFG.cz+CFG.zmax):clamp(nz,CFG.cz-CFG.zmax,CFG.cz-CFG.zmin);}}
  else{const I=INT[place];nx=clamp(nx,I.ox-I.w/2+.7,I.ox+I.w/2-.7);nz=clamp(nz,I.oz-I.d/2+.7,I.oz+I.d/2-.7);if(PP.on){nx=clamp(nx,CFG.cx-CFG.xr,CFG.cx+CFG.xr);nz=PP.side>0?clamp(nz,CFG.cz+CFG.zmin,CFG.cz+CFG.zmax):clamp(nz,CFG.cz-CFG.zmax,CFG.cz-CFG.zmin);}}
  P.x=nx;P.z=nz;P.spd=Math.hypot(P.vx,P.vz);
- if(len>.12){const ta=Math.atan2(mx,mz);let d=ta-P.ry;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;P.ry+=d*Math.min(1,12*dt);}
+ if(len>.12&&!brk){const ta=Math.atan2(mx,mz);let d=ta-P.ry;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;P.ry+=d*Math.min(1,12*dt);}
  if(flying){const ud=(upH||keys.q?1:0)-(downH||keys.z?1:0);P.y=clamp(P.y+ud*7*dt,quid.active?.8:0,quid.active?24:20);P.vy=0;}
  else if(swim){P.y+=(-.55-P.y)*Math.min(1,5*dt);P.vy=0;}
  else if(!P.freeze){if(P.y<0&&P.vy===0){P.y=Math.min(0,P.y+3*dt);}else{P.vy-=20*dt;P.y+=P.vy*dt;if(P.y<=0){P.y=0;P.vy=0;}}}
@@ -1340,6 +1340,37 @@ function swimEnd(why){if(!SWM.on)return;try{if(SWM.bav){scene.remove(SWM.bav);SW
  else if(why==='late'){title='😅 היריב ניצח';msg='היריב סיים לפניך.';}
  else{title='המרוץ הסתיים';msg='לא הצלחתם לסיים בזמן.';}
  openPanel(title,[h('div',{style:'font-size:18px;margin:10px 0;line-height:1.6'},[msg])]);}
+
+/* ---------- brake + park at home ---------- */
+window.BRK=false;
+(function(){
+ function mk(id,txt,css){const b=document.createElement('button');b.id=id;b.className='btn';b.textContent=txt;b.style.cssText='position:fixed;z-index:45;display:none;font-size:18px;font-weight:700;padding:12px 16px;border-radius:16px;'+css;document.body.appendChild(b);return b;}
+ const br=mk('brkBtn','🛑 בלם','right:14px;bottom:150px;background:#c0262d;color:#fff;border:2px solid #fff');
+ const pk=mk('parkBtn','🅿️ חנה ליד הבית','left:50%;transform:translateX(-50%);bottom:150px;background:#1d6fd1;color:#fff;border:2px solid #fff');
+ const on=e=>{e.preventDefault();e.stopPropagation();window.BRK=true;};const off=e=>{if(e&&e.preventDefault)e.preventDefault();window.BRK=false;};
+ br.addEventListener('pointerdown',on);br.addEventListener('pointerup',off);br.addEventListener('pointercancel',off);br.addEventListener('pointerleave',off);br.addEventListener('touchstart',on,{passive:false});br.addEventListener('touchend',off);
+ let pm=null;
+ function parkClear(){if(pm){try{scene.remove(pm);}catch(e){}pm=null;}}
+ function parkShow(){parkClear();const q=S.parked;if(!q||!BYID[q.id])return;try{pm=vehMesh(q.id);pm.position.set(q.x,0,q.z);pm.rotation.y=q.ry||0;scene.add(pm);}catch(e){pm=null;}}
+ function veh(){return P.riding?BYID[S.curVeh]:null;}
+ function nearHome(){if(typeof S.home!=='number'||!HOMES[S.home])return null;const H=HOMES[S.home];return Math.hypot(H.x-P.x,H.z-P.z)<16?H:null;}
+ pk.onclick=()=>{const v=veh(),H=nearHome();if(!v||v.fly||!H||place!=='out')return;
+  let dx=P.x-H.x,dz=P.z-H.z;const l=Math.hypot(dx,dz)||1;dx/=l;dz/=l;
+  const sx=H.x+dx*8,sz=H.z+dz*8;
+  S.parked={id:v.id,x:+sx.toFixed(1),z:+sz.toFixed(1),ry:+(P.ry||0).toFixed(2)};
+  P.riding=false;P.vx=P.vz=0;P.x=sx+2.2;P.z=sz;try{setRide();}catch(e){}
+  parkShow();saveSoon();toast('🅿️ החנית את '+v.n+' ליד הבית');};
+ let lastRide=false,shown=false;
+ setInterval(()=>{try{
+  if(typeof P==='undefined'||typeof S==='undefined'||typeof me==='undefined'||!me)return;
+  const v=veh(),can=!!v&&!v.fly&&place==='out'&&!quid.active;
+  br.style.display=can?'block':'none';if(!can)window.BRK=false;
+  pk.style.display=(can&&nearHome())?'block':'none';
+  if(P.riding&&!lastRide&&S.parked&&S.parked.id===S.curVeh){S.parked=null;parkClear();saveSoon();}
+  lastRide=P.riding;
+  if(!shown&&S.parked&&!P.riding&&typeof scene!=='undefined'){shown=true;parkShow();}
+ }catch(e){}},300);
+})();
 </script>
 <script>
 /* ---------- preview, real estate, registration, own shops ---------- */
