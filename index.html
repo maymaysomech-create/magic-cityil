@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;font-family:sy
   <div id="chars" style="display:none"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>const BUILD="1795709463";(function(){if(!/^https?:/.test(location.protocol))return;fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);}}).catch(()=>{});})();</script>
+<script>const BUILD="1795710104";(function(){if(!/^https?:/.test(location.protocol))return;fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);}}).catch(()=>{});})();</script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -1127,9 +1127,9 @@ buildAllPlots();buildShopPlots();
 /* ---------- friends room over direct connection (no Claude account needed) ---------- */
 const NET={on:false,hub:false,peer:null,conn:null,conns:{},sids:{},states:{},code:null,cbs:{},peersCb:null,iv:null,dirty:false,seen:{},lastL:0,wd:null,real:null,busy:false};
 const NETSHIM={
- presence(st){if(NET.hub){NET.states[SID]=st;NET.dirty=true;}else if(NET.conn&&NET.conn.open){try{NET.conn.send({t:'p',s:st});}catch(e){}}},
+ presence(st){if(NET.mode==='mqtt'){mqPub('/p',{s:st},true);return;}if(NET.hub){NET.states[SID]=st;NET.dirty=true;}else if(NET.conn&&NET.conn.open){try{NET.conn.send({t:'p',s:st});}catch(e){}}},
  onPeers(fn){NET.peersCb=fn;},
- emit(topic,data){if(NET.hub){netDeliver(topic,data);for(const k in NET.conns){const c=NET.conns[k];if(c.open){try{c.send({t:'e',k:topic,d:data});}catch(e){}}}}else if(NET.conn&&NET.conn.open){try{NET.conn.send({t:'e',k:topic,d:data});}catch(e){}}},
+ emit(topic,data){if(NET.mode==='mqtt'){mqPub('/e',{k:topic,d:data,f:SID});return;}if(NET.hub){netDeliver(topic,data);for(const k in NET.conns){const c=NET.conns[k];if(c.open){try{c.send({t:'e',k:topic,d:data});}catch(e){}}}}else if(NET.conn&&NET.conn.open){try{NET.conn.send({t:'e',k:topic,d:data});}catch(e){}}},
  on(topic,fn){(NET.cbs[topic]=NET.cbs[topic]||[]).push(fn);}};
 function netDeliver(topic,data){(NET.cbs[topic]||[]).forEach(f=>{try{f(data);}catch(e){}});}
 function netLoad(cb){if(window.Peer)return cb(true);const s=document.createElement('script');s.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';s.onload=()=>cb(!!window.Peer);s.onerror=()=>cb(false);document.head.appendChild(s);}
@@ -1142,7 +1142,7 @@ function netStartHub(){NET.states={};NET.seen={};NET.dirty=true;clearInterval(NE
   if(NET.peersCb){try{NET.peersCb(list);}catch(e){}}},150);}
 function netFinish(code,role){NET.on=true;NET.code=code;NET.hub=role==='hub';if(ROOM!==NETSHIM)NET.real=ROOM;ROOM=NETSHIM;NET.cbs={};setupRoom();
  ROOM.on('chat',m=>{if(!m||!m.text)return;CHAT.msgs.push(m);CHAT.msgs=CHAT.msgs.slice(-60);if(!CHAT.box){CHAT.unread++;$('bChat').textContent='💬 צ׳אט ('+CHAT.unread+')';}renderChat();});}
-function netLeave(quiet){clearInterval(NET.iv);clearInterval(NET.wd);try{if(NET.conn&&NET.conn.open)NET.conn.send({t:'bye'});}catch(e){}try{if(NET.conn)NET.conn.close();}catch(e){}try{if(NET.peer)NET.peer.destroy();}catch(e){}
+function netLeave(quiet){if(NET.mq){try{NET.mq.publish(MQ_T+'/bye',SID);NET.mq.end(true);}catch(e){}NET.mq=null;}clearInterval(NET.mqiv);NET.mode=null;clearInterval(NET.iv);clearInterval(NET.wd);try{if(NET.conn&&NET.conn.open)NET.conn.send({t:'bye'});}catch(e){}try{if(NET.conn)NET.conn.close();}catch(e){}try{if(NET.peer)NET.peer.destroy();}catch(e){}
  const was=NET.on;NET.on=false;NET.hub=false;NET.peer=null;NET.conn=null;NET.conns={};NET.sids={};NET.states={};NET.code=null;if(was){ROOM=NET.real||null;if(NET.peersCb){try{NET.peersCb([]);}catch(e){}}if(!quiet)toast('התנתקת מהחדר');}}
 function netJoin(code,done){if(NET.busy)return;NET.busy=true;netLeave(true);const fin=r=>{NET.busy=false;done(r);};
  netLoad(ok=>{if(!ok){fin('load');return;}
@@ -1161,11 +1161,35 @@ function netJoin(code,done){if(NET.busy)return;NET.busy=true;netLeave(true);cons
    p.on('connection',c=>{c.on('open',()=>{NET.conns[c.peer]=c;});c.on('data',m=>netHubData(c,m));c.on('close',()=>netHubGone(c));c.on('error',()=>netHubGone(c));});
    netStartHub();netFinish(code,'hub');stop('hub');});
   p.on('error',err=>{if(err&&err.type==='unavailable-id'&&!settled){try{p.destroy();}catch(e){}asClient();}else stop('err');});});}
-addEventListener('pagehide',()=>{try{if(NET.conn&&NET.conn.open)NET.conn.send({t:'bye'});}catch(e){}});
-const NETROOM='7311';let netTries=0;
-function netAuto(){if(NET.on||NET.busy)return;if(ROOM&&!/github\.io$/.test(location.hostname))return;NET.auto=true;
- netJoin(NETROOM,r=>{if(r==='hub'||r==='client'){netTries=0;toast(r==='hub'?'🌐 החדר הקבוע פתוח – חברים נכנסים אוטומטית':'🌐 נכנסת לחדר הקבוע',false);}
-  else if(NET.auto&&netTries++<8)setTimeout(netAuto,4000+Math.random()*3000);});}
+addEventListener('pagehide',()=>{try{if(NET.mq)NET.mq.publish(MQ_T+'/bye',SID);}catch(e){}try{if(NET.conn&&NET.conn.open)NET.conn.send({t:'bye'});}catch(e){}});
+const NETROOM='7311',MQ_T='mcity7311';let netTries=0;
+const MQ_URLS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
+function netLoadMq(cb){if(window.mqtt)return cb(true);const urls=['https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js','https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js'];let i=0;
+ (function next(){if(i>=urls.length)return cb(false);const sc=document.createElement('script');sc.src=urls[i++];sc.onload=()=>window.mqtt?cb(true):next();sc.onerror=next;document.head.appendChild(sc);})();}
+let mqLast=0;
+function mqPub(sub,obj,throttle){const c=NET.mq;if(!c||!c.connected)return;const now=Date.now();if(throttle){if(now-mqLast<190)return;mqLast=now;}try{c.publish(MQ_T+sub,JSON.stringify(obj),{qos:0});}catch(e){}}
+function mqGone(sid){if(NET.states[sid]){delete NET.states[sid];delete NET.seen[sid];NET.dirty=true;}}
+function netMqtt(done){netLeave(true);netLoadMq(ok=>{if(!ok){done('load');return;}let idx=0,fin=false;
+ const tryNext=()=>{if(idx>=MQ_URLS.length){if(!fin){fin=true;done('err');}return;}const url=MQ_URLS[idx++];let cl;
+  try{cl=mqtt.connect(url,{clientId:'mc'+SID+Math.random().toString(36).slice(2,5),reconnectPeriod:2500,connectTimeout:7000,keepalive:20,clean:true,will:{topic:MQ_T+'/bye',payload:SID,qos:0}});}catch(e){tryNext();return;}
+  let opened=false;const to=setTimeout(()=>{if(!opened){try{cl.end(true);}catch(e){}tryNext();}},8000);
+  cl.on('error',()=>{});
+  cl.on('message',(topic,buf)=>{let m=null;const raw=String(buf);
+   if(topic===MQ_T+'/bye'){mqGone(raw);return;}
+   try{m=JSON.parse(raw);}catch(e){return;}if(!m||typeof m!=='object')return;
+   if(topic===MQ_T+'/p'){const st=m.s;if(!st||typeof st.sid!=='string'||st.sid===SID||st.sid.length>20)return;NET.states[st.sid]=st;NET.seen[st.sid]=Date.now();NET.dirty=true;}
+   else if(topic===MQ_T+'/e'){if(m.f===SID||typeof m.k!=='string')return;netDeliver(m.k,m.d);}});
+  cl.on('connect',()=>{if(opened)return;opened=true;clearTimeout(to);
+   cl.subscribe([MQ_T+'/p',MQ_T+'/e',MQ_T+'/bye'],{qos:0});
+   NET.mq=cl;NET.mode='mqtt';NET.states={};NET.seen={};NET.dirty=true;
+   clearInterval(NET.mqiv);NET.mqiv=setInterval(()=>{const now=Date.now();for(const k in NET.seen){if(now-NET.seen[k]>6000)mqGone(k);}
+    if(!NET.dirty)return;NET.dirty=false;if(NET.peersCb){try{NET.peersCb(Object.keys(NET.states).map(k=>NET.states[k]));}catch(e){}}},150);
+   netFinish(NETROOM,'mq');if(!fin){fin=true;done('ok');}});
+ };tryNext();});}
+function netAuto(){if(NET.on||NET.busy)return;if(ROOM&&!/github\.io$/.test(location.hostname))return;NET.auto=true;NET.busy=true;
+ netMqtt(r=>{NET.busy=false;if(r==='ok'){netTries=0;toast('🌐 מחוברים לחדר המשותף',false);return;}
+  netJoin(NETROOM,r2=>{if(r2==='hub'||r2==='client'){netTries=0;toast(r2==='hub'?'🌐 החדר פתוח – חברים נכנסים אוטומטית':'🌐 נכנסת לחדר',false);}
+   else if(NET.auto&&netTries++<8)setTimeout(netAuto,4000+Math.random()*3000);});});}
 function netMenu(){const nodes=[];
  nodes.push(h('div',{style:'font-size:14px;line-height:1.55;margin-bottom:8px'},['כולם נכנסים אוטומטית לחדר קבוע אחד, ואפשר גם לבחור חדר פרטי עם קוד. אפשר לשחק בלי חשבון Claude. כל החברים מקלידים את אותו קוד, והראשון שנכנס פותח את החדר. הוא חייב להישאר במשחק כל עוד שאר החברים משחקים.']));
  if(NET.on){nodes.push(h('div',{style:'color:#7dffa0;font-weight:700;margin:6px 0'},['✔ מחוברים לחדר '+NET.code+' · חברים בחדר: '+(Object.keys(peers).length+1)]));
@@ -1188,7 +1212,7 @@ function netMenu(){const nodes=[];
 setInterval(()=>{if(!window.started&&typeof started==='undefined'){d.style.display='none';return;}
  try{if(!started){d.style.display='none';return;}}catch(e){}
  d.style.display='block';
- if(NET.on){const n=Object.keys(peers).length+1;d.textContent='🟢 '+(NET.hub?'מארח':'מחובר')+' · '+n+' בחדר';d.style.color=n>1?'#9fffbf':'#fff';}
+ if(NET.on){const n=Object.keys(peers).length+1;d.textContent=(NET.mode==='mqtt'&&!(NET.mq&&NET.mq.connected))?'⏳ מתחבר מחדש…':'🟢 '+(NET.hub?'מארח':'מחובר')+' · '+n+' בחדר';d.style.color=n>1?'#9fffbf':'#fff';}
  else d.textContent=NET.busy?'⏳ מתחבר לחדר…':'⚪ לא מחובר לחדר';},800);})();
 </script>
 <script>
