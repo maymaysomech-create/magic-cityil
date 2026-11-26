@@ -579,7 +579,7 @@ function buy(it,kind,re){if(kind!=='furn'&&S.own.includes(it.id)){toast('כבר 
 function bag(){const nodes=[];
  function sec(t){nodes.push(h('div',{style:'margin:10px 0 2px;color:#ffd978;font-weight:700'},[t]));}
  function eq(list,key,title){sec(title);list.filter(it=>S.own.includes(it.id)).forEach(it=>nodes.push(row((S[key]===it.id?'✔ ':'')+it.n,S[key]===it.id?'':'לבש',()=>{S[key]=it.id;applyOutfit(me,S);saveSoon();bag();})));}
- nodes.push(h('div',0,['₪'+S.money+' · אזהרות תנועה: '+S.warn+'/3']));nodes.push(row('🎨 עיצוב הדמות','שנה מראה',()=>{closePanel();lookMenu();}));nodes.push(row('🌐 חדר חברים (בלי חשבון Claude)',NET.on?'חדר '+NET.code:'היכנס',()=>{closePanel();netMenu();}));
+ nodes.push(h('div',0,['₪'+S.money+' · אזהרות תנועה: '+S.warn+'/3']));nodes.push(row('🎨 עיצוב הדמות','שנה מראה',()=>{closePanel();lookMenu();}));
  eq(WANDS,'wand','🪄 שרביטים');eq(CLOTHES.filter(c=>c.k==='robe'),'robe','👘 גלימות');eq(CLOTHES.filter(c=>c.k==='hat'),'hat','🎩 כובעים');eq(CLOTHES.filter(c=>c.k==='scarf'),'scarf','🧣 צעיפים');
  const fc={};S.own.forEach(i=>{if(i.startsWith('f_'))fc[i]=(fc[i]||0)+1;});sec('🛋️ רהיטים');if(!Object.keys(fc).length)nodes.push(h('div',0,['אין עדיין – קנה בחנות רהיטים']));for(const k in fc)nodes.push(row(BYID[k].n+' × '+fc[k]));
  sec('🚗 כלי תחבורה');if(!VEHS.some(v=>S.own.includes(v.id)))nodes.push(h('div',0,['אין עדיין – קנה במוסך']));VEHS.filter(v=>S.own.includes(v.id)).forEach(v=>nodes.push(row(v.e+' '+v.n,S.curVeh===v.id?'✔ נבחר':'בחר',()=>{S.curVeh=v.id;if(P.riding)setRide();saveSoon();bag();})));
@@ -832,7 +832,7 @@ function openChat(){CHAT.unread=0;$('bChat').textContent='💬 צ׳אט';
  function send(){const t=inp.value.trim();if(!t)return;if(Date.now()-CHAT.sent<800)return;CHAT.sent=Date.now();inp.value='';const m={ts:Date.now(),ch:S.ch,nm:S.nick||null,text:t.slice(0,200),u:UID};
   if(typeof NET!=='undefined'&&NET.on){CHAT.msgs.push(m);CHAT.msgs=CHAT.msgs.slice(-60);renderChat();ROOM.emit('chat',m);}else if(DB){try{const p=DB.collection('chat').doc(m.ts+'_'+SID).set(m);if(p&&p.catch)p.catch(()=>toast('לא הצלחתי לשלוח',true));}catch(e){toast('לא הצלחתי לשלוח',true);}}else{CHAT.msgs.push(m);renderChat();}}
  inp.addEventListener('keydown',e=>{if(e.key==='Enter')send();e.stopPropagation();});inp.addEventListener('keyup',e=>e.stopPropagation());
- openPanel('💬 צ׳אט קבוצתי',[box,inp,h('button',{class:'btn',style:'margin-top:8px;width:100%',on:send},['שלח']),h('div',{style:'font-size:12px;opacity:.7;margin-top:6px'},[(typeof NET!=='undefined'&&NET.on)?'🌐 חדר '+NET.code+': כל החברים בחדר רואים':(DB?'כל מי שנכנס למשחק רואה את ההודעות':'כדי לצ׳אט עם חברים בלי חשבון – היכנסו לחדר חברים')]),h('button',{class:'btn',style:'width:100%;margin-top:6px',on:()=>{closePanel();netMenu();}},['🌐 חדר חברים (קוד)'])],()=>{CHAT.box=null;});
+ openPanel('💬 צ׳אט קבוצתי',[box,inp,h('button',{class:'btn',style:'margin-top:8px;width:100%',on:send},['שלח']),h('div',{style:'font-size:12px;opacity:.7;margin-top:6px'},[(typeof NET!=='undefined'&&NET.on)?'🌐 חדר '+NET.code+': כל החברים בחדר רואים':(DB?'כל מי שנכנס למשחק רואה את ההודעות':'הצ׳אט נפתח כשמתחברים לחדר')])],()=>{CHAT.box=null;});
  CHAT.box=box;renderChat();}
 $('bChat').onclick=()=>{if(!panelOpen())openChat();};
 /* ---------- boot ---------- */
