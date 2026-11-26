@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;font-family:sy
   <div id="chars" style="display:none"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>const BUILD="1795708987";(function(){if(!/^https?:/.test(location.protocol))return;fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);}}).catch(()=>{});})();</script>
+<script>const BUILD="1795709463";(function(){if(!/^https?:/.test(location.protocol))return;fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);}}).catch(()=>{});})();</script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -1149,7 +1149,7 @@ function netJoin(code,done){if(NET.busy)return;NET.busy=true;netLeave(true);cons
   const id='mcity-'+code;let settled=false,tm=setTimeout(()=>{if(!settled){settled=true;fin('timeout');}},14000);
   const stop=r=>{if(settled)return;settled=true;clearTimeout(tm);fin(r);};
   const asClient=()=>{let q;try{q=new Peer();}catch(e){stop('err');return;}
-   q.on('error',()=>stop('err'));
+   q.on('error',()=>stop('err'));q.on('disconnected',()=>{try{if(!q.destroyed)q.reconnect();}catch(e){}});
    q.on('open',()=>{const c=q.connect(id,{reliable:true,serialization:'json'});
     c.on('open',()=>{if(settled){try{q.destroy();}catch(e){}return;}NET.peer=q;NET.conn=c;NET.lastL=Date.now();clearInterval(NET.wd);NET.wd=setInterval(()=>{if(NET.conn===c&&Date.now()-NET.lastL>8000){try{c.close();}catch(e){}if(NET.conn===c&&c.h&&0){}}},2000);netFinish(code,'client');stop('client');});
     c.on('data',m=>{if(!m)return;if(m.t==='l'){NET.lastL=Date.now();if(NET.peersCb){try{NET.peersCb(m.l);}catch(e){}}}else if(m.t==='e')netDeliver(m.k,m.d);});
@@ -1157,6 +1157,7 @@ function netJoin(code,done){if(NET.busy)return;NET.busy=true;netLeave(true);cons
     c.on('error',()=>stop('err'));});};
   let p;try{p=new Peer(id);}catch(e){stop('err');return;}
   p.on('open',()=>{if(settled){try{p.destroy();}catch(e){}return;}NET.peer=p;
+   p.on('disconnected',()=>{try{if(NET.peer===p&&!p.destroyed)p.reconnect();}catch(e){}});
    p.on('connection',c=>{c.on('open',()=>{NET.conns[c.peer]=c;});c.on('data',m=>netHubData(c,m));c.on('close',()=>netHubGone(c));c.on('error',()=>netHubGone(c));});
    netStartHub();netFinish(code,'hub');stop('hub');});
   p.on('error',err=>{if(err&&err.type==='unavailable-id'&&!settled){try{p.destroy();}catch(e){}asClient();}else stop('err');});});}
@@ -1180,6 +1181,15 @@ function netMenu(){const nodes=[];
   nodes.push(h('button',{class:'btn',style:'width:100%;margin-top:6px;padding:9px',on:()=>{inp.value=String(rint(1000,9999));}},['🎲 קוד אקראי']));
   nodes.push(msg);}
  openPanel('🌐 חדר חברים',nodes);}
+</script>
+
+<script>
+(function(){const d=document.createElement('div');d.id='netInd';d.style.cssText='position:fixed;left:8px;bottom:8px;z-index:40;font:12px system-ui,Arial;color:#fff;background:#0009;border-radius:10px;padding:3px 8px;pointer-events:none;direction:rtl';document.body.appendChild(d);
+setInterval(()=>{if(!window.started&&typeof started==='undefined'){d.style.display='none';return;}
+ try{if(!started){d.style.display='none';return;}}catch(e){}
+ d.style.display='block';
+ if(NET.on){const n=Object.keys(peers).length+1;d.textContent='🟢 '+(NET.hub?'מארח':'מחובר')+' · '+n+' בחדר';d.style.color=n>1?'#9fffbf':'#fff';}
+ else d.textContent=NET.busy?'⏳ מתחבר לחדר…':'⚪ לא מחובר לחדר';},800);})();
 </script>
 <script>
 /* ---------- preview, real estate, registration, own shops ---------- */
