@@ -839,7 +839,7 @@ $('bChat').onclick=()=>{if(!panelOpen())openChat();};
 let started=false;
 function begin(){me=makeAvatar(lookOf(),S);scene.add(me);
  normalizeHome();buildPlot(S.home);const ho=HOMES[S.home].out;P.x=(S.pos&&isFinite(S.pos.x))?S.pos.x:ho.x;P.z=(S.pos&&isFinite(S.pos.z))?S.pos.z:ho.z;P.ry=Math.PI;cam.yaw=0;
- setRide();updHud();$('splash').style.display='none';started=true;setupRoom();setupChat();pubHouse();pubShop();worldInit();
+ setRide();updHud();$('splash').style.display='none';started=true;setupRoom();setupChat();pubHouse();pubShop();worldInit();try{if(typeof netAuto==='function')setTimeout(netAuto,1500);}catch(e){}
  setInterval(save,15000);addEventListener('visibilitychange',()=>{if(document.hidden)save();});addEventListener('pagehide',save);
  toast('ברוך הבא, '+(S.nick||CH[S.ch].name)+'! 🪄 הכסף שלך נשמר אוטומטית');}
 let lastT=performance.now(),et=0,frame=0;
@@ -1132,17 +1132,21 @@ function netJoin(code,done){if(NET.busy)return;NET.busy=true;netLeave(true);cons
    q.on('open',()=>{const c=q.connect(id,{reliable:true,serialization:'json'});
     c.on('open',()=>{if(settled){try{q.destroy();}catch(e){}return;}NET.peer=q;NET.conn=c;netFinish(code,'client');stop('client');});
     c.on('data',m=>{if(!m)return;if(m.t==='l'&&NET.peersCb){try{NET.peersCb(m.l);}catch(e){}}else if(m.t==='e')netDeliver(m.k,m.d);});
-    c.on('close',()=>{if(NET.conn===c){netLeave(true);toast('החדר נסגר – מי שפתח אותו יצא מהמשחק',true);}});
+    c.on('close',()=>{if(NET.conn===c){netLeave(true);if(NET.auto){toast('מתחברים מחדש לחדר…');setTimeout(netAuto,1200+Math.random()*3000);}else toast('החדר נסגר – מי שפתח אותו יצא מהמשחק',true);}});
     c.on('error',()=>stop('err'));});};
   let p;try{p=new Peer(id);}catch(e){stop('err');return;}
   p.on('open',()=>{if(settled){try{p.destroy();}catch(e){}return;}NET.peer=p;
    p.on('connection',c=>{c.on('open',()=>{NET.conns[c.peer]=c;});c.on('data',m=>netHubData(c,m));c.on('close',()=>netHubGone(c));c.on('error',()=>netHubGone(c));});
    netStartHub();netFinish(code,'hub');stop('hub');});
   p.on('error',err=>{if(err&&err.type==='unavailable-id'&&!settled){try{p.destroy();}catch(e){}asClient();}else stop('err');});});}
+const NETROOM='7311';let netTries=0;
+function netAuto(){if(NET.on||NET.busy)return;if(ROOM&&!/github\.io$/.test(location.hostname))return;NET.auto=true;
+ netJoin(NETROOM,r=>{if(r==='hub'||r==='client'){netTries=0;toast(r==='hub'?'🌐 החדר הקבוע פתוח – חברים נכנסים אוטומטית':'🌐 נכנסת לחדר הקבוע',false);}
+  else if(NET.auto&&netTries++<8)setTimeout(netAuto,4000+Math.random()*3000);});}
 function netMenu(){const nodes=[];
- nodes.push(h('div',{style:'font-size:14px;line-height:1.55;margin-bottom:8px'},['כאן אפשר לשחק עם חברים בלי חשבון Claude, כשכולם בקובץ או בקישור. כל החברים מקלידים את אותו קוד, והראשון שנכנס פותח את החדר. הוא חייב להישאר במשחק כל עוד שאר החברים משחקים.']));
+ nodes.push(h('div',{style:'font-size:14px;line-height:1.55;margin-bottom:8px'},['כולם נכנסים אוטומטית לחדר קבוע אחד, ואפשר גם לבחור חדר פרטי עם קוד. אפשר לשחק בלי חשבון Claude. כל החברים מקלידים את אותו קוד, והראשון שנכנס פותח את החדר. הוא חייב להישאר במשחק כל עוד שאר החברים משחקים.']));
  if(NET.on){nodes.push(h('div',{style:'color:#7dffa0;font-weight:700;margin:6px 0'},['✔ מחוברים לחדר '+NET.code+' · חברים בחדר: '+(Object.keys(peers).length+1)]));
-  nodes.push(h('button',{class:'btn',style:'width:100%;padding:11px',on:()=>{netLeave();closePanel();}},['התנתק מהחדר']));}
+  nodes.push(h('button',{class:'btn',style:'width:100%;padding:11px',on:()=>{NET.auto=false;netLeave();closePanel();}},['התנתק מהחדר']));}
  else{const inp=h('input',{type:'text',inputmode:'numeric',maxlength:'6',placeholder:'קוד (מספר), למשל 4821',style:'width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid #ffd97899;background:rgba(255,255,255,.1);color:#fff;font-size:20px;text-align:center'});
   inp.addEventListener('keydown',e=>e.stopPropagation());inp.addEventListener('keyup',e=>e.stopPropagation());
   const msg=h('div',{style:'margin-top:8px;min-height:20px;font-size:14px'},[]);
