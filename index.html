@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;font-family:sy
   <div id="chars" style="display:none"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>const BUILD="1795715229";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
+<script>const BUILD="1795715753";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -880,7 +880,7 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-lastT)
 <script>
 /* ---------- houses ---------- */
 function renderItems(I,list){while(I.items.children.length)I.items.remove(I.items.children[0]);(list||[]).forEach((it,idx)=>{if(!BYID[it.id]||(it.fl||0)!==(I.fl||0))return;const m=furnMesh(it.id);m.userData.pi=idx;m.position.set(clamp(it.x,-I.w/2+.8,I.w/2-.8),it.y||0,clamp(it.z,-I.d/2+.8,I.d/2-.8));m.rotation.y=it.ry||0;I.items.add(m);});}
-async function loadHouse(ci,rid){rid=rid||'house'+ci;const I=INT[rid];if(ci===S.home){renderItems(I,S.placed);return;}renderItems(I,[]);if(!DB)return;
+async function loadHouse(ci,rid){rid=rid||'house'+ci;const I=INT[rid];if(ci===S.home){renderItems(I,S.placed);return;}renderItems(I,(OCC[ci]&&OCC[ci].placed)||[]);if(!DB)return;
  try{const ds=await Promise.all(CH.filter((c,i)=>i!==S.ch).map(c=>{try{return Promise.resolve(DB.collection('houses').doc(c.id).get()).then(dat).catch(()=>null);}catch(e){return null;}}));
   const d=ds.find(x=>x&&x.home===ci&&Array.isArray(x.placed));if(d&&place===rid)renderItems(I,d.placed);}catch(e){}}
 function pubHouse(){try{if(typeof netPubWorld==='function')netPubWorld();}catch(e){}if(!DB)return;try{const p=DB.collection('houses').doc(CH[S.ch].id).set({home:S.home,tier:S.tier,style:S.style,wall:S.wall,roof:S.roof,md:S.md,nick:S.nick||CH[S.ch].name,placed:JSON.parse(JSON.stringify(S.placed)),t:Date.now()});if(p&&p.catch)p.catch(()=>{});}catch(e){}}
@@ -1246,7 +1246,7 @@ const NETW={};
 function netPubWorld(){clearTimeout(netPubWorld.t);netPubWorld.t=setTimeout(()=>{const c=NET.mq;if(!c||!c.connected||S.ch==null||!S.reg)return;
  if(!S.pid){S.pid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);try{saveSoon();}catch(e){}}
  const nk=(S.nick||CH[S.ch].name||'').slice(0,16);
- const hm=(typeof S.home==='number')?{home:S.home,tier:S.tier,style:S.style,wall:S.wall,roof:S.roof,md:S.md,nick:nk}:null;
+ const hm=(typeof S.home==='number')?{home:S.home,tier:S.tier,style:S.style,wall:S.wall,roof:S.roof,md:S.md,nick:nk,pl:(S.placed||[]).slice(0,80).map(p=>({id:p.id,x:p.x,z:p.z,ry:p.ry||0,y:p.y||0,fl:p.fl||0}))}:null;
  const sh=S.shop?{plot:S.shop.plot,type:S.shop.type,name:String(S.shop.name||'').slice(0,16),color:S.shop.color,nick:nk,items:S.shop.items||null,names:S.shop.names||null}:null;
  try{c.publish(MQ_T+'/w/'+S.pid,JSON.stringify({h:hm,s:sh,t:Date.now()}),{qos:0,retain:true});}catch(e){}},400);}
 function netWorldMsg(pid,m){if(!pid||pid.length>24||(S.pid&&pid===S.pid))return;NETW[pid]=m;clearTimeout(netWorldMsg.t);netWorldMsg.t=setTimeout(netApplyWorld,350);}
@@ -1256,10 +1256,11 @@ function netApplyWorld(){try{const no={},ns={},num=v=>typeof v==='number'&&isFin
  for(const pid in NETW){const m=NETW[pid];if(!m)continue;
   const d=m.h;if(d&&typeof d.home==='number'&&HOMES[d.home]&&d.home!==S.home){const t=Math.max(0,Math.min(2,d.tier|0));
    if((HOMES[d.home].kind==='mansion')===(t===2)){const sty=['regular','bricks','palace'].includes(d.style)?d.style:'regular',md=['classic','modern','villa'].includes(d.md)?d.md:'classic';
-    no[d.home]={tier:t,style:sty,wall:num(d.wall),roof:num(d.roof),md,owner:str(d.nick,'שחקן')};}}
+    no[d.home]={tier:t,style:sty,wall:num(d.wall),roof:num(d.roof),md,owner:str(d.nick,'שחקן'),placed:(Array.isArray(d.pl)?d.pl.slice(0,80):[]).filter(p=>p&&typeof p.id==='string'&&BYID[p.id]&&num(p.x)!==null&&num(p.z)!==null).map(p=>({id:p.id,x:p.x,z:p.z,ry:num(p.ry)||0,y:num(p.y)||0,fl:p.fl?1:0}))};}}
   const q=m.s;if(q&&typeof q.plot==='number'&&q.plot>=0&&q.plot<7&&SHOPPLOTS[q.plot]&&typeof q.type==='string'&&(!S.shop||S.shop.plot!==q.plot))ns[q.plot]={type:q.type.slice(0,10),name:str(q.name,'חנות'),color:num(q.color),owner:str(q.nick,'שחקן'),pid,items:cleanItems(q.items),names:cleanNames(q.names)};}
  const o0=OCC,s0=SOCC;OCC=no;SOCC=ns;
- HOMES.forEach((H,i)=>{if(i!==S.home&&JSON.stringify(o0[i])!==JSON.stringify(no[i])){try{buildPlot(i);}catch(e){}}});
+ try{if(typeof place==='string'&&place.indexOf('house')===0){const ci=+place.slice(5);if(no[ci]&&JSON.stringify(no[ci].placed)!==JSON.stringify((o0[ci]||{}).placed))renderItems(INT[place],no[ci].placed);}}catch(e){}
+ HOMES.forEach((H,i)=>{if(i!==S.home&&JSON.stringify(Object.assign({},o0[i],{placed:0}))!==JSON.stringify(Object.assign({},no[i],{placed:0}))){try{buildPlot(i);}catch(e){}}});
  SHOPPLOTS.forEach((p,k)=>{if((!S.shop||S.shop.plot!==k)&&JSON.stringify(s0[k])!==JSON.stringify(ns[k])){try{buildShopPlot(k);}catch(e){}}});
  }catch(e){}}
 function netAuto(){if(NET.on||NET.busy)return;if(ROOM&&!/github\.io$/.test(location.hostname))return;NET.auto=true;NET.busy=true;
