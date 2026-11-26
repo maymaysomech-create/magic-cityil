@@ -747,7 +747,8 @@ function targetGame(lv){lv=lv||'hard';const L=TLV[lv];mgOpen('🎯 פגיעה ב
 const peers={};
 function peerList(p){const out=[];const push=e=>{if(!e)return;const st=e.state||e.presence||e.data||e.value||e;if(st&&st.sid&&st.sid!==SID)out.push(st);};if(Array.isArray(p))p.forEach(push);else if(p&&typeof p==='object')Object.keys(p).forEach(k=>push(p[k]));return out;}
 function onPeers(p){const list=peerList(p),seen={};list.forEach(st=>{seen[st.sid]=1;let o=peers[st.sid];
-  if(!o){const av=makeAvatar(Object.assign({},CH[clamp(st.ci|0,0,4)],st.lk||{}),{robe:st.robe,hat:st.hat,scarf:st.scarf,wand:st.wand});scene.add(av);o=peers[st.sid]={av,sig:'',st};av.position.set(st.x||0,st.y||0,st.z||0);}
+  if(!o){const av=makeAvatar(Object.assign({},CH[clamp(st.ci|0,0,4)],st.lk||{}),{robe:st.robe,hat:st.hat,scarf:st.scarf,wand:st.wand,nick:st.nick});scene.add(av);o=peers[st.sid]={av,sig:'',st,nick:st.nick||null};av.position.set(st.x||0,st.y||0,st.z||0);}
+  if((st.nick||null)!==o.nick){o.nick=st.nick||null;try{const u=o.av.userData,c=Object.assign({},CH[clamp(st.ci|0,0,4)],st.lk||{});if(u.label){u.label.parent&&u.label.parent.remove(u.label);}u.label=labelSprite(o.nick||c.name,c.girl?'#ffb6e6':'#ffe08a');u.label.position.y=2.55;o.av.add(u.label);}catch(e){}}
   o.st=st;const sig=[st.robe,st.hat,st.scarf,st.wand].join();if(sig!==o.sig){o.sig=sig;applyOutfit(o.av,st);}
   if(st.q&&Q.wait&&(!st.q.g||st.q.g==='quid')&&((st.q.state==='wait')||(st.q.opp===SID&&st.q.state==='play')))quidStart('human',st.sid);
   if(st.q&&PW.g&&!PW.play&&st.q.g===PW.g&&((st.q.state==='wait')||(st.q.opp===SID&&st.q.state==='play')))pongHuman(PW.g,st.sid);});
@@ -1105,7 +1106,7 @@ buildAllPlots();buildShopPlots();
 </script>
 <script>
 /* ---------- friends room over direct connection (no Claude account needed) ---------- */
-const NET={on:false,hub:false,peer:null,conn:null,conns:{},sids:{},states:{},code:null,cbs:{},peersCb:null,iv:null,dirty:false,real:null,busy:false};
+const NET={on:false,hub:false,peer:null,conn:null,conns:{},sids:{},states:{},code:null,cbs:{},peersCb:null,iv:null,dirty:false,seen:{},lastL:0,wd:null,real:null,busy:false};
 const NETSHIM={
  presence(st){if(NET.hub){NET.states[SID]=st;NET.dirty=true;}else if(NET.conn&&NET.conn.open){try{NET.conn.send({t:'p',s:st});}catch(e){}}},
  onPeers(fn){NET.peersCb=fn;},
@@ -1113,15 +1114,16 @@ const NETSHIM={
  on(topic,fn){(NET.cbs[topic]=NET.cbs[topic]||[]).push(fn);}};
 function netDeliver(topic,data){(NET.cbs[topic]||[]).forEach(f=>{try{f(data);}catch(e){}});}
 function netLoad(cb){if(window.Peer)return cb(true);const s=document.createElement('script');s.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';s.onload=()=>cb(!!window.Peer);s.onerror=()=>cb(false);document.head.appendChild(s);}
-function netHubData(c,m){if(!m)return;if(m.t==='p'&&m.s&&m.s.sid){NET.sids[c.peer]=m.s.sid;NET.states[m.s.sid]=m.s;NET.dirty=true;}
+function netHubData(c,m){if(!m)return;if(m.t==='bye'){netHubGone(c);try{c.close();}catch(e){}return;}
+ if(m.t==='p'&&m.s&&m.s.sid){NET.sids[c.peer]=m.s.sid;NET.states[m.s.sid]=m.s;NET.seen[m.s.sid]=Date.now();NET.dirty=true;}
  else if(m.t==='e'){netDeliver(m.k,m.d);for(const k in NET.conns){if(k===c.peer)continue;const o=NET.conns[k];if(o.open){try{o.send({t:'e',k:m.k,d:m.d});}catch(e){}}}}}
 function netHubGone(c){delete NET.conns[c.peer];const s=NET.sids[c.peer];if(s){delete NET.states[s];delete NET.sids[c.peer];NET.dirty=true;}}
-function netStartHub(){NET.states={};NET.dirty=true;clearInterval(NET.iv);NET.iv=setInterval(()=>{if(!NET.dirty)return;NET.dirty=false;const list=Object.keys(NET.states).map(k=>NET.states[k]);
+function netStartHub(){NET.states={};NET.seen={};NET.dirty=true;clearInterval(NET.iv);NET.iv=setInterval(()=>{const now=Date.now();for(const sid in NET.seen){if(sid!==SID&&now-NET.seen[sid]>6000){delete NET.seen[sid];delete NET.states[sid];NET.dirty=true;}}if(!NET.dirty)return;NET.dirty=false;const list=Object.keys(NET.states).map(k=>NET.states[k]);
   for(const k in NET.conns){const c=NET.conns[k];if(c.open){try{c.send({t:'l',l:list});}catch(e){}}}
   if(NET.peersCb){try{NET.peersCb(list);}catch(e){}}},150);}
 function netFinish(code,role){NET.on=true;NET.code=code;NET.hub=role==='hub';if(ROOM!==NETSHIM)NET.real=ROOM;ROOM=NETSHIM;NET.cbs={};setupRoom();
  ROOM.on('chat',m=>{if(!m||!m.text)return;CHAT.msgs.push(m);CHAT.msgs=CHAT.msgs.slice(-60);if(!CHAT.box){CHAT.unread++;$('bChat').textContent='💬 צ׳אט ('+CHAT.unread+')';}renderChat();});}
-function netLeave(quiet){clearInterval(NET.iv);try{if(NET.conn)NET.conn.close();}catch(e){}try{if(NET.peer)NET.peer.destroy();}catch(e){}
+function netLeave(quiet){clearInterval(NET.iv);clearInterval(NET.wd);try{if(NET.conn&&NET.conn.open)NET.conn.send({t:'bye'});}catch(e){}try{if(NET.conn)NET.conn.close();}catch(e){}try{if(NET.peer)NET.peer.destroy();}catch(e){}
  const was=NET.on;NET.on=false;NET.hub=false;NET.peer=null;NET.conn=null;NET.conns={};NET.sids={};NET.states={};NET.code=null;if(was){ROOM=NET.real||null;if(NET.peersCb){try{NET.peersCb([]);}catch(e){}}if(!quiet)toast('התנתקת מהחדר');}}
 function netJoin(code,done){if(NET.busy)return;NET.busy=true;netLeave(true);const fin=r=>{NET.busy=false;done(r);};
  netLoad(ok=>{if(!ok){fin('load');return;}
@@ -1130,8 +1132,8 @@ function netJoin(code,done){if(NET.busy)return;NET.busy=true;netLeave(true);cons
   const asClient=()=>{let q;try{q=new Peer();}catch(e){stop('err');return;}
    q.on('error',()=>stop('err'));
    q.on('open',()=>{const c=q.connect(id,{reliable:true,serialization:'json'});
-    c.on('open',()=>{if(settled){try{q.destroy();}catch(e){}return;}NET.peer=q;NET.conn=c;netFinish(code,'client');stop('client');});
-    c.on('data',m=>{if(!m)return;if(m.t==='l'&&NET.peersCb){try{NET.peersCb(m.l);}catch(e){}}else if(m.t==='e')netDeliver(m.k,m.d);});
+    c.on('open',()=>{if(settled){try{q.destroy();}catch(e){}return;}NET.peer=q;NET.conn=c;NET.lastL=Date.now();clearInterval(NET.wd);NET.wd=setInterval(()=>{if(NET.conn===c&&Date.now()-NET.lastL>8000){try{c.close();}catch(e){}if(NET.conn===c&&c.h&&0){}}},2000);netFinish(code,'client');stop('client');});
+    c.on('data',m=>{if(!m)return;if(m.t==='l'){NET.lastL=Date.now();if(NET.peersCb){try{NET.peersCb(m.l);}catch(e){}}}else if(m.t==='e')netDeliver(m.k,m.d);});
     c.on('close',()=>{if(NET.conn===c){netLeave(true);if(NET.auto){toast('מתחברים מחדש לחדר…');setTimeout(netAuto,1200+Math.random()*3000);}else toast('החדר נסגר – מי שפתח אותו יצא מהמשחק',true);}});
     c.on('error',()=>stop('err'));});};
   let p;try{p=new Peer(id);}catch(e){stop('err');return;}
@@ -1139,6 +1141,7 @@ function netJoin(code,done){if(NET.busy)return;NET.busy=true;netLeave(true);cons
    p.on('connection',c=>{c.on('open',()=>{NET.conns[c.peer]=c;});c.on('data',m=>netHubData(c,m));c.on('close',()=>netHubGone(c));c.on('error',()=>netHubGone(c));});
    netStartHub();netFinish(code,'hub');stop('hub');});
   p.on('error',err=>{if(err&&err.type==='unavailable-id'&&!settled){try{p.destroy();}catch(e){}asClient();}else stop('err');});});}
+addEventListener('pagehide',()=>{try{if(NET.conn&&NET.conn.open)NET.conn.send({t:'bye'});}catch(e){}});
 const NETROOM='7311';let netTries=0;
 function netAuto(){if(NET.on||NET.busy)return;if(ROOM&&!/github\.io$/.test(location.hostname))return;NET.auto=true;
  netJoin(NETROOM,r=>{if(r==='hub'||r==='client'){netTries=0;toast(r==='hub'?'🌐 החדר הקבוע פתוח – חברים נכנסים אוטומטית':'🌐 נכנסת לחדר הקבוע',false);}
