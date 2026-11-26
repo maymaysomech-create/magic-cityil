@@ -595,6 +595,7 @@ $('bMap').onclick=()=>{if(panelOpen())return;openPanel('🗺️ מקומות ב�
 const K=.32,mmc=$('minimap'),mmg=mmc.getContext('2d');let mmT=0;
 function drawMini(){mmg.clearRect(0,0,96,96);mmg.fillStyle='rgba(60,110,60,.6)';mmg.fillRect(0,0,96,96);mmg.fillStyle='#555';ROADS.forEach(r=>{if(r.h)mmg.fillRect(48+r.a*K,48+r.c*K-1.5,(r.b-r.a)*K,3);else mmg.fillRect(48+r.c*K-1.5,48+r.a*K,3,(r.b-r.a)*K);});
  POIS.forEach(p=>{mmg.fillStyle=p.c;mmg.fillRect(48+p.x*K-2,48+p.z*K-2,4,4);});
+ try{for(const k in peers){const st=peers[k].st;if(!st)continue;const x=48+(st.x||0)*K,y=48+(st.z||0)*K;if(x<0||x>96||y<0||y>96)continue;mmg.fillStyle='#4dff88';mmg.strokeStyle='#fff';mmg.lineWidth=1;mmg.beginPath();mmg.arc(x,y,3.2,0,7);mmg.fill();mmg.stroke();}}catch(e){}
  if(place==='out'){mmg.save();mmg.translate(48+P.x*K,48+P.z*K);mmg.rotate(-P.ry+Math.PI);mmg.fillStyle='#fff';mmg.beginPath();mmg.moveTo(0,-5);mmg.lineTo(4,4);mmg.lineTo(-4,4);mmg.fill();mmg.restore();}}
 </script>
 <script>
@@ -1381,6 +1382,7 @@ function openWorldMap(){if(JOB.lock){toast('אתם באמצע משמרת – ל�
    const show=p.t>0||ST.sel===p;g.fillStyle=p.c;g.beginPath();g.arc(q[0],q[1],p.t===2?0:(ST.sel===p?10:6),0,7);g.fill();
    if(show&&(V.z>1||p.t!==0||ST.sel===p)){g.fillStyle=p.t===2?'#9ff':'#fff';g.strokeText(p.n,q[0],q[1]-16);g.fillText(p.n,q[0],q[1]-16);}});
   if(ST.sel){const q=W(ST.sel.x,ST.sel.z);g.strokeStyle='#ffd978';g.lineWidth=4;g.beginPath();g.arc(q[0],q[1],16,0,7);g.stroke();}
+  try{for(const k in peers){const st=peers[k].st;if(!st)continue;const q=W(st.x||0,st.z||0);if(q[0]<-20||q[0]>N+20||q[1]<-20||q[1]>N+20)continue;const nm=st.nick||(CH[clamp(st.ci|0,0,4)]||{}).name||'שחקן';g.fillStyle='#4dff88';g.strokeStyle='#fff';g.lineWidth=3;g.beginPath();g.arc(q[0],q[1],9,0,7);g.fill();g.stroke();g.fillStyle='#9fffbf';g.lineWidth=5;g.strokeStyle='rgba(10,10,30,.85)';g.strokeText(nm,q[0],q[1]-18);g.fillText(nm,q[0],q[1]-18);}}catch(e){}
   const pp=place==='out'?W(P.x,P.z):W(lastOut.x,lastOut.z);g.fillStyle='#ff3030';g.strokeStyle='#fff';g.lineWidth=3;g.save();g.translate(pp[0],pp[1]);g.rotate(-P.ry+Math.PI);g.beginPath();g.moveTo(0,-11);g.lineTo(8,9);g.lineTo(-8,9);g.closePath();g.fill();g.stroke();g.restore();}
  const info=h('div',{style:'margin:8px 0;min-height:22px;font-size:15px;text-align:center'},['לחץ על מקום במפה 👆']);
  const go=h('button',{class:'btn',style:'width:100%;padding:12px;font-size:17px;opacity:.5',on:()=>{const p=ST.sel;if(!p)return;if(PP.on||Q.on){toast('קודם סיים את המשחק');return;}
@@ -1403,8 +1405,12 @@ function openWorldMap(){if(JOB.lock){toast('אתם באמצע משמרת – ל�
  cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
  cv.addEventListener('wheel',e=>{e.preventDefault();V.z*=e.deltaY<0?1.15:.87;clampV();draw();},{passive:false});
  const zoom=h('button',{class:'btn',style:'margin-bottom:8px',on:()=>{V.z=V.z<1.5?2.6:1;const t=ST.sel||{x:P.x,z:P.z};V.cx=V.z>1?t.x:0;V.cz=V.z>1?t.z:0;clampV();draw();}},['🔍 הגדל / הקטן (או צבטו עם האצבעות)']);
- const tm=setInterval(()=>{if(!$('pn').classList.contains('on')){clearInterval(tm);return;}draw();},500);
- openPanel('🗺️ מפת העיר',[h('div',{style:'font-size:13px;opacity:.85;margin-bottom:6px'},['צבטו עם שתי אצבעות להגדלה/הקטנה וגררו כדי לזוז. לחצו על מקום ואז "השתגר". 🔴 = אתה, 🟡 = הבית שלך']),zoom,cv,info,go],()=>clearInterval(tm));
+ const onl=h('div',{style:'margin:8px 0;font-size:15px;text-align:center;color:#9fffbf'},[]);
+ function updOnl(){const names=[];for(const k in peers){const st=peers[k].st;if(st)names.push(st.nick||(CH[clamp(st.ci|0,0,4)]||{}).name||'שחקן');}
+  onl.textContent=(typeof NET!=='undefined'&&NET.on)?(names.length?'🟢 מחוברים עכשיו ('+(names.length+1)+'): את/ה'+(S.nick?' ('+S.nick+')':'')+', '+names.join(', '):'🟢 מחוברים לחדר – אתה לבד כרגע'):'⚪ לא מחוברים לחדר';}
+ updOnl();
+ const tm=setInterval(()=>{if(!$('pn').classList.contains('on')){clearInterval(tm);return;}updOnl();draw();},500);
+ openPanel('🗺️ מפת העיר',[h('div',{style:'font-size:13px;opacity:.85;margin-bottom:6px'},['צבטו עם שתי אצבעות להגדלה/הקטנה וגררו כדי לזוז. לחצו על מקום ואז "השתגר". 🔴 = אתה, 🟡 = הבית שלך, 🟢 = חברים מחוברים']),onl,zoom,cv,info,go],()=>clearInterval(tm));
  draw();}
 $('bMap').onclick=()=>{if(panelOpen())return;openWorldMap();};
 (async function(){requestAnimationFrame(loop);$('barI').style.width='40%';await initBackend();$('barI').style.width='70%';await loadSave();$('barI').style.width='100%';
