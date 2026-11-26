@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;font-family:sy
   <div id="chars" style="display:none"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>const BUILD="1795713042";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
+<script>const BUILD="1795713255";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -878,7 +878,7 @@ function renderItems(I,list){while(I.items.children.length)I.items.remove(I.item
 async function loadHouse(ci,rid){rid=rid||'house'+ci;const I=INT[rid];if(ci===S.home){renderItems(I,S.placed);return;}renderItems(I,[]);if(!DB)return;
  try{const ds=await Promise.all(CH.filter((c,i)=>i!==S.ch).map(c=>{try{return Promise.resolve(DB.collection('houses').doc(c.id).get()).then(dat).catch(()=>null);}catch(e){return null;}}));
   const d=ds.find(x=>x&&x.home===ci&&Array.isArray(x.placed));if(d&&place===rid)renderItems(I,d.placed);}catch(e){}}
-function pubHouse(){if(!DB)return;try{const p=DB.collection('houses').doc(CH[S.ch].id).set({home:S.home,tier:S.tier,style:S.style,wall:S.wall,roof:S.roof,md:S.md,nick:S.nick||CH[S.ch].name,placed:JSON.parse(JSON.stringify(S.placed)),t:Date.now()});if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+function pubHouse(){try{if(typeof netPubWorld==='function')netPubWorld();}catch(e){}if(!DB)return;try{const p=DB.collection('houses').doc(CH[S.ch].id).set({home:S.home,tier:S.tier,style:S.style,wall:S.wall,roof:S.roof,md:S.md,nick:S.nick||CH[S.ch].name,placed:JSON.parse(JSON.stringify(S.placed)),t:Date.now()});if(p&&p.catch)p.catch(()=>{});}catch(e){}}
 function arrangeMenu(ci){if(ci!==S.home){toast('זה לא הבית שלך – אפשר להסתכל, אבל לא לשנות 🙂');return;}
  const I=(INT[place]&&INT[place].ci===ci)?INT[place]:INT['house'+ci];
  function build(){const owned={},pl={};S.own.forEach(id=>{if(id.startsWith('f_'))owned[id]=(owned[id]||0)+1;});S.placed.forEach(p=>pl[p.id]=(pl[p.id]||0)+1);
@@ -1120,7 +1120,7 @@ async function fetchWorld(){if(!DB)return;
   HOMES.forEach((H,i)=>{if(i!==S.home&&JSON.stringify(o0[i])!==JSON.stringify(no[i]))buildPlot(i);});
   SHOPPLOTS.forEach((p,k)=>{if((!S.shop||S.shop.plot!==k)&&JSON.stringify(s0[k])!==JSON.stringify(ns[k]))buildShopPlot(k);});
  }catch(e){}}
-function pubShop(){if(!DB||S.ch==null)return;try{const s=S.shop,p=DB.collection('shops').doc(CH[S.ch].id).set(s?{plot:s.plot,type:s.type,name:s.name,color:s.color,nick:S.nick||CH[S.ch].name,t:Date.now()}:{plot:-1,t:Date.now()});if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+function pubShop(){try{if(typeof netPubWorld==='function')netPubWorld();}catch(e){}if(!DB||S.ch==null)return;try{const s=S.shop,p=DB.collection('shops').doc(CH[S.ch].id).set(s?{plot:s.plot,type:s.type,name:s.name,color:s.color,nick:S.nick||CH[S.ch].name,t:Date.now()}:{plot:-1,t:Date.now()});if(p&&p.catch)p.catch(()=>{});}catch(e){}}
 function shopTick(){const s=S.shop;if(!s)return;const now=Date.now(),dt=Math.min(Math.max(0,(now-(s.t||now))/1000),7200);s.t=now;s.cash=Math.min(600,(s.cash||0)+dt*.0667);}
 function worldInit(){fetchWorld();setInterval(fetchWorld,25000);shopTick();setInterval(()=>{shopTick();saveSoon();},10000);}
 buildAllPlots();buildShopPlots();
@@ -1144,7 +1144,7 @@ function netStartHub(){NET.states={};NET.seen={};NET.dirty=true;clearInterval(NE
   if(NET.peersCb){try{NET.peersCb(list);}catch(e){}}},150);}
 function netFinish(code,role){NET.on=true;NET.code=code;NET.hub=role==='hub';if(ROOM!==NETSHIM)NET.real=ROOM;ROOM=NETSHIM;NET.cbs={};setupRoom();
  ROOM.on('chat',m=>{if(!m||!m.text)return;CHAT.msgs.push(m);CHAT.msgs=CHAT.msgs.slice(-60);if(!CHAT.box){CHAT.unread++;$('bChat').textContent='💬 צ׳אט ('+CHAT.unread+')';}renderChat();});}
-function netLeave(quiet){if(NET.mq){try{NET.mq.publish(MQ_T+'/bye',SID);NET.mq.end(true);}catch(e){}NET.mq=null;}clearInterval(NET.mqiv);NET.mode=null;clearInterval(NET.iv);clearInterval(NET.wd);try{if(NET.conn&&NET.conn.open)NET.conn.send({t:'bye'});}catch(e){}try{if(NET.conn)NET.conn.close();}catch(e){}try{if(NET.peer)NET.peer.destroy();}catch(e){}
+function netLeave(quiet){if(NET.mq){try{NET.mq.publish(MQ_T+'/bye',SID);NET.mq.end(true);}catch(e){}NET.mq=null;}clearInterval(NET.mqiv);clearInterval(NET.pwiv);NET.mode=null;clearInterval(NET.iv);clearInterval(NET.wd);try{if(NET.conn&&NET.conn.open)NET.conn.send({t:'bye'});}catch(e){}try{if(NET.conn)NET.conn.close();}catch(e){}try{if(NET.peer)NET.peer.destroy();}catch(e){}
  const was=NET.on;NET.on=false;NET.hub=false;NET.peer=null;NET.conn=null;NET.conns={};NET.sids={};NET.states={};NET.code=null;if(was){ROOM=NET.real||null;if(NET.peersCb){try{NET.peersCb([]);}catch(e){}}if(!quiet)toast('התנתקת מהחדר');}}
 function netJoin(code,done){if(NET.busy)return;NET.busy=true;netLeave(true);const fin=r=>{NET.busy=false;done(r);};
  netLoad(ok=>{if(!ok){fin('load');return;}
@@ -1179,15 +1179,36 @@ function netMqtt(done){netLeave(true);netLoadMq(ok=>{if(!ok){done('load');return
   cl.on('message',(topic,buf)=>{let m=null;const raw=String(buf);
    if(topic===MQ_T+'/bye'){mqGone(raw);return;}
    try{m=JSON.parse(raw);}catch(e){return;}if(!m||typeof m!=='object')return;
+   if(topic.indexOf(MQ_T+'/w/')===0){netWorldMsg(topic.slice(MQ_T.length+3),m);return;}
    if(topic===MQ_T+'/p'){const st=m.s;if(!st||typeof st.sid!=='string'||st.sid===SID||st.sid.length>20)return;NET.states[st.sid]=st;NET.seen[st.sid]=Date.now();NET.dirty=true;}
    else if(topic===MQ_T+'/e'){if(m.f===SID||typeof m.k!=='string')return;netDeliver(m.k,m.d);}});
   cl.on('connect',()=>{if(opened)return;opened=true;clearTimeout(to);
-   cl.subscribe([MQ_T+'/p',MQ_T+'/e',MQ_T+'/bye'],{qos:0});
+   cl.subscribe([MQ_T+'/p',MQ_T+'/e',MQ_T+'/bye',MQ_T+'/w/+'],{qos:0});
    NET.mq=cl;NET.mode='mqtt';NET.states={};NET.seen={};NET.dirty=true;
    clearInterval(NET.mqiv);NET.mqiv=setInterval(()=>{const now=Date.now();for(const k in NET.seen){if(now-NET.seen[k]>6000)mqGone(k);}
     if(!NET.dirty)return;NET.dirty=false;if(NET.peersCb){try{NET.peersCb(Object.keys(NET.states).map(k=>NET.states[k]));}catch(e){}}},150);
-   netFinish(NETROOM,'mq');if(!fin){fin=true;done('ok');}});
+   clearInterval(NET.pwiv);NET.pwiv=setInterval(netPubWorld,120000);setTimeout(netPubWorld,800);netFinish(NETROOM,'mq');if(!fin){fin=true;done('ok');}});
  };tryNext();});}
+
+/* ---- shared world: everyone's house and shop, kept on the relay (retained) ---- */
+const NETW={};
+function netPubWorld(){clearTimeout(netPubWorld.t);netPubWorld.t=setTimeout(()=>{const c=NET.mq;if(!c||!c.connected||S.ch==null||!S.reg)return;
+ if(!S.pid){S.pid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);try{saveSoon();}catch(e){}}
+ const nk=(S.nick||CH[S.ch].name||'').slice(0,16);
+ const hm=(typeof S.home==='number')?{home:S.home,tier:S.tier,style:S.style,wall:S.wall,roof:S.roof,md:S.md,nick:nk}:null;
+ const sh=S.shop?{plot:S.shop.plot,type:S.shop.type,name:String(S.shop.name||'').slice(0,16),color:S.shop.color,nick:nk}:null;
+ try{c.publish(MQ_T+'/w/'+S.pid,JSON.stringify({h:hm,s:sh,t:Date.now()}),{qos:0,retain:true});}catch(e){}},400);}
+function netWorldMsg(pid,m){if(!pid||pid.length>24||(S.pid&&pid===S.pid))return;NETW[pid]=m;clearTimeout(netWorldMsg.t);netWorldMsg.t=setTimeout(netApplyWorld,350);}
+function netApplyWorld(){try{const no={},ns={},num=v=>typeof v==='number'&&isFinite(v)?v:null,str=(v,d)=>typeof v==='string'?v.slice(0,16):d;
+ for(const pid in NETW){const m=NETW[pid];if(!m)continue;
+  const d=m.h;if(d&&typeof d.home==='number'&&HOMES[d.home]&&d.home!==S.home){const t=Math.max(0,Math.min(2,d.tier|0));
+   if((HOMES[d.home].kind==='mansion')===(t===2)){const sty=['regular','bricks','palace'].includes(d.style)?d.style:'regular',md=['classic','modern','villa'].includes(d.md)?d.md:'classic';
+    no[d.home]={tier:t,style:sty,wall:num(d.wall),roof:num(d.roof),md,owner:str(d.nick,'שחקן')};}}
+  const q=m.s;if(q&&typeof q.plot==='number'&&q.plot>=0&&q.plot<7&&SHOPPLOTS[q.plot]&&typeof q.type==='string'&&(!S.shop||S.shop.plot!==q.plot))ns[q.plot]={type:q.type.slice(0,10),name:str(q.name,'חנות'),color:num(q.color),owner:str(q.nick,'שחקן')};}
+ const o0=OCC,s0=SOCC;OCC=no;SOCC=ns;
+ HOMES.forEach((H,i)=>{if(i!==S.home&&JSON.stringify(o0[i])!==JSON.stringify(no[i])){try{buildPlot(i);}catch(e){}}});
+ SHOPPLOTS.forEach((p,k)=>{if((!S.shop||S.shop.plot!==k)&&JSON.stringify(s0[k])!==JSON.stringify(ns[k])){try{buildShopPlot(k);}catch(e){}}});
+ }catch(e){}}
 function netAuto(){if(NET.on||NET.busy)return;if(ROOM&&!/github\.io$/.test(location.hostname))return;NET.auto=true;NET.busy=true;
  netMqtt(r=>{NET.busy=false;if(r==='ok'){netTries=0;toast('🌐 מחוברים לחדר המשותף',false);return;}
   netJoin(NETROOM,r2=>{if(r2==='hub'||r2==='client'){netTries=0;toast(r2==='hub'?'🌐 החדר פתוח – חברים נכנסים אוטומטית':'🌐 נכנסת לחדר',false);}
