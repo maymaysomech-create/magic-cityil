@@ -753,7 +753,24 @@ function onPeers(p){const list=peerList(p),seen={};list.forEach(st=>{seen[st.sid
   o.st=st;const sig=[st.robe,st.hat,st.scarf,st.wand].join();if(sig!==o.sig){o.sig=sig;applyOutfit(o.av,st);}
   if(st.q&&Q.wait&&(!st.q.g||st.q.g==='quid')&&((st.q.state==='wait')||(st.q.opp===SID&&st.q.state==='play')))quidStart('human',st.sid);
   if(st.q&&PW.g&&!PW.play&&st.q.g===PW.g&&((st.q.state==='wait')||(st.q.opp===SID&&st.q.state==='play')))pongHuman(PW.g,st.sid);});
- for(const k in peers)if(!seen[k]){scene.remove(peers[k].av);delete peers[k];}}
+ for(const k in peers)if(!seen[k]){scene.remove(peers[k].av);delete peers[k];}
+ try{invUpdate();}catch(e){}}
+
+/* ---------- game invitations: shown to everyone when a friend is waiting ---------- */
+const GNAME={tennis:'🎾 טניס',pingpong:'🏓 פינג פונג',quid:'🧹 קווידיץ׳'};
+function invUpdate(){let bar=document.getElementById('invBar');
+ if(!bar){bar=document.createElement('div');bar.id='invBar';bar.style.cssText='position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:60;background:#2b1d6e;border:2px solid #ffd978;border-radius:16px;padding:10px 14px;color:#fff;font-size:16px;font-weight:700;display:none;align-items:center;gap:10px;max-width:92vw;box-shadow:0 6px 20px #0008;direction:rtl';document.body.appendChild(bar);}
+ const busy=PP.on||Q.on||PW.play||Q.wait||PW.g;let cand=null;
+ if(!busy)for(const k in peers){const st=peers[k].st;if(st&&st.q&&st.q.state==='wait'&&GNAME[st.q.g||'quid']){cand=st;break;}}
+ if(!cand){bar.style.display='none';bar.dataset.sid='';return;}
+ const g=cand.q.g||'quid',nm=cand.nick||(CH[clamp(cand.ci|0,0,4)]||{}).name||'חבר';
+ if(bar.dataset.sid===cand.sid+g&&bar.style.display==='flex')return;
+ bar.dataset.sid=cand.sid+g;bar.innerHTML='';
+ const t=document.createElement('span');t.textContent=nm+' רוצה לשחק '+GNAME[g];bar.appendChild(t);
+ const b=document.createElement('button');b.className='btn';b.textContent='הצטרף';b.style.cssText='padding:8px 14px;font-size:16px';
+ b.onclick=()=>{bar.style.display='none';if(PP.on||Q.on||PW.play)return;
+  if(g==='quid')quidStart('human',cand.sid);else{PW.g=g;PW.cfg=PCFG[g];pongHuman(g,cand.sid);}};
+ bar.appendChild(b);bar.style.display='flex';}
 function peersTick(dt){for(const k in peers){const o=peers[k],s=o.st,a=o.av,u=a.userData;const dx=(s.x||0)-a.position.x,dz=(s.z||0)-a.position.z;const sp=Math.hypot(dx,dz)/Math.max(dt,.001);
   a.position.x+=dx*Math.min(1,10*dt);a.position.z+=dz*Math.min(1,10*dt);a.position.y+=((s.y||0)-a.position.y)*Math.min(1,10*dt);
   let d=(s.ry||0)-a.rotation.y;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;a.rotation.y+=d*Math.min(1,10*dt);
