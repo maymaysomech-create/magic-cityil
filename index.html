@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;font-family:sy
   <div id="chars" style="display:none"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>const BUILD="1795713255";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
+<script>const BUILD="1795714502";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -560,17 +560,21 @@ function closePanel(){$('pn').classList.remove('on');if(closePanel.cb){const f=c
 function row(text,btn,fn,dis){const r=h('div',{class:'row'},[h('span',0,[text])]);if(btn){const b=h('button',{class:'btn',on:fn},[btn]);if(dis){b.style.opacity=.5;}r.appendChild(b);}return r;}
 $('pn').addEventListener('pointerdown',e=>{if(e.target===$('pn'))closePanel();});
 /* ---------- shops ---------- */
-function shop(kind){const lists={wands:WANDS,clothes:CLOTHES,furn:FURN,veh:VEHS},titles={wands:'🪄 חנות שרביטים',clothes:'👘 גלימות ובגדים',furn:'🛋️ חנות רהיטים',veh:'🚗 מוסך רכבים'};
+function shop(kind,opt){opt=opt||{};const lists={wands:WANDS,clothes:CLOTHES,furn:FURN,veh:VEHS},titles={wands:'🪄 חנות שרביטים',clothes:'👘 גלימות ובגדים',furn:'🛋️ חנות רהיטים',veh:'🚗 מוסך רכבים'};
  function build(){const nodes=[h('div',{style:'margin-bottom:6px;color:#ffd978'},['הכסף שלך: ₪'+S.money])];
-  lists[kind].forEach(it=>{if(it.p===0&&kind!=='furn')return;const has=S.own.includes(it.id),multi=kind==='furn';
+  const cust=opt.items&&Object.keys(opt.items).length?opt.items:null;
+  if(opt.owner)nodes.push(h('div',{style:'margin-bottom:6px;font-size:14px;opacity:.9'},['🏪 '+(opt.title||'חנות')+' · של '+opt.owner]));
+  if(cust&&!Object.keys(cust).some(id=>lists[kind].some(x=>x.id===id)))nodes.push(h('div',0,['בחנות הזו עוד אין מוצרים 🙂']));
+  lists[kind].forEach(it0=>{if(it0.p===0&&kind!=='furn')return;if(cust&&cust[it0.id]==null)return;const it=cust?Object.assign({},it0,{p:Math.max(1,Math.min(9999,Math.round(+cust[it0.id])||it0.p)),n:(opt.names&&opt.names[it0.id])||it0.n}):it0;const has=S.own.includes(it.id),multi=kind==='furn';
    const sw=h('span',{class:'sw',style:'background:'+(it.c||'#999')},[]);const label=h('span',0,[sw,it.n+(it.sp?` (מהירות ${it.sp})`:'')+' – ₪'+it.p]);
    const r=h('div',{class:'row'},[label]);
-   if(kind==='veh'&&!has)r.appendChild(h('button',{class:'btn',style:'margin-inline-end:6px;background:#2a7a4a',on:()=>testDrive(it)},['🏁 נסה']));r.appendChild(h('button',{class:'btn',on:()=>buy(it,kind,build)},[has&&!multi?'✔ בבעלותך':'קנה']));nodes.push(r);});
+   if(kind==='veh'&&!has)r.appendChild(h('button',{class:'btn',style:'margin-inline-end:6px;background:#2a7a4a',on:()=>testDrive(it)},['🏁 נסה']));r.appendChild(h('button',{class:'btn',on:()=>buy(it,kind,build,opt)},[has&&!multi?'✔ בבעלותך':'קנה']));nodes.push(r);});
   openPanel(titles[kind],nodes);}
  build();}
-function buy(it,kind,re){if(kind!=='furn'&&S.own.includes(it.id)){toast('כבר יש לך את זה');return;}
+function buy(it,kind,re,opt){if(kind!=='furn'&&S.own.includes(it.id)){toast('כבר יש לך את זה');return;}
  if(S.money<it.p){toast('אין מספיק כסף 😕',true);return;}
  money(-it.p);S.own.push(it.id);
+ if(opt&&opt.pid&&!opt.mine){try{ROOM.emit('sale',{to:opt.pid,amt:it.p,item:it.n,from:S.nick||CH[S.ch].name});}catch(e){}}
  if(kind==='wands'){S.wand=it.id;applyOutfit(me,S);toast('קנית '+it.n+' והיא כבר ביד שלך! 🪄');}
  else if(kind==='clothes'){S[it.k]=it.id;applyOutfit(me,S);toast('קנית '+it.n+' ולבשת אותה ✨');}
  else if(kind==='veh'){S.curVeh=it.id;toast('קנית '+it.n+'! לחץ על 🚗 כדי לעלות');}
@@ -838,6 +842,7 @@ function quidEnd(forced){if(PP.on){ppEnd(true);return;}if(!Q.on)return;const min
  openPanel(win?'🏆 ניצחת בקווידיץ׳!':(mine===theirs?'🤝 תיקו':'😅 היריב ניצח'),[h('div',{style:'font-size:20px;margin:10px 0'},['התוצאה: '+mine+' : '+theirs]),h('div',{style:'font-size:18px'},[win?'קיבלת ₪'+reward+'!':'בפעם הבאה! אפשר לשחק שוב במגרש.'])]);}
 function setupRoom(){if(!ROOM)return;try{ROOM.onPeers(onPeers);}catch(e){}
  try{ROOM.on('qball',d=>{if(!d||d.to!==SID||!Q.on||Q.host)return;const b=Q.ball;b.x=d.x;b.y=d.y;b.z=d.z;b.vx=d.vx;b.vy=d.vy;b.vz=d.vz;Q.hold=d.hold;Q.sc=d.sc||Q.sc;Q.t=d.t;if(d.msg)toast(d.msg==='g1'?'⚽ גול! 10 נקודות לך! 🎉':'😮 היריב קלע גול!');if(d.over)quidEnd(false);});}catch(e){}
+ try{ROOM.on('sale',d=>{if(!d||!S.pid||d.to!==S.pid||!S.shop)return;const a=Math.max(0,Math.min(9999,+d.amt||0));S.shop.cash=(S.shop.cash||0)+a;saveSoon();toast('🛍️ '+String(d.from||'חבר').slice(0,14)+' קנה '+String(d.item||'מוצר').slice(0,14)+' – ₪'+a+' נכנסו לחנות');});}catch(e){}
  try{ROOM.on('swim',d=>{if(typeof swimRecv==='function')swimRecv(d);});}catch(e){}
  try{ROOM.on('pstate',d=>{if(PNET.onState)PNET.onState(d);});ROOM.on('pmove',d=>{if(PNET.onMove)PNET.onMove(d);});}catch(e){}
  try{ROOM.on('pb',d=>{if(PPNET.onState)PPNET.onState(d);});ROOM.on('ppact',d=>{if(PPNET.onAct)PPNET.onAct(d);});}catch(e){}
@@ -889,9 +894,20 @@ function arrangeMenu(ci){if(ci!==S.home){toast('זה לא הבית שלך – א
    bx.appendChild(h('button',{class:'btn',on:()=>{if(free<=0)return;placeItem(id,I);build();}},['הנח']));
    bx.appendChild(h('button',{class:'btn',on:()=>{for(let i=S.placed.length-1;i>=0;i--)if(S.placed[i].id===id){S.placed.splice(i,1);break;}renderItems(I,S.placed);saveSoon();pubHouse();build();}},['הסר']));
    r.appendChild(bx);nodes.push(r);}
+  const here=S.placed.map((p,i)=>({p,i})).filter(o=>BYID[o.p.id]&&(o.p.fl||0)===(I.fl||0));
+  if(here.length){nodes.push(h('div',{style:'margin:12px 0 4px;color:#ffd978;font-weight:700'},['✋ הזזת חפצים (עמוד במקום החדש ולחץ "הזז אליי")']));
+   here.forEach(o=>{const r=h('div',{class:'row'},[h('span',0,[BYID[o.p.id].n])]);const bx=h('span',{style:'display:flex;gap:6px;flex-wrap:wrap'},[]);
+    bx.appendChild(h('button',{class:'btn',on:()=>{const q=itemPos(o.p.id,I);Object.assign(o.p,q);renderItems(I,S.placed);saveSoon();pubHouse();toast('הועבר 👍');}},['📍 הזז אליי']));
+    bx.appendChild(h('button',{class:'btn',on:()=>{o.p.ry=+(((o.p.ry||0)+Math.PI/2)%(Math.PI*2)).toFixed(2);renderItems(I,S.placed);saveSoon();pubHouse();}},['↻ סובב']));
+    bx.appendChild(h('button',{class:'btn',on:()=>{S.placed.splice(o.i,1);renderItems(I,S.placed);saveSoon();pubHouse();build();}},['✖']));
+    r.appendChild(bx);nodes.push(r);});}
   nodes.push(h('button',{class:'btn',style:'margin-top:8px',on:()=>{S.placed=[];renderItems(I,S.placed);saveSoon();pubHouse();build();}},['🧹 פנה את כל הבית']));
   openPanel('🛋️ סידור הבית',nodes);}
  build();}
+function itemPos(id,I){let x=P.x+Math.sin(P.ry)*1.8-I.ox,z=P.z+Math.cos(P.ry)*1.8-I.oz,ry=P.ry+Math.PI;
+ if(id==='f_paint'){const dN=z+I.d/2,dS=I.d/2-z,dW=x+I.w/2,dE=I.w/2-x,m=Math.min(dN,dS,dW,dE);
+  if(m===dN){z=-I.d/2+.2;ry=0;}else if(m===dS){z=I.d/2-.2;ry=Math.PI;}else if(m===dW){x=-I.w/2+.2;ry=Math.PI/2;}else{x=I.w/2-.2;ry=-Math.PI/2;}}
+ x=clamp(x,-I.w/2+.8,I.w/2-.8);z=clamp(z,-I.d/2+.8,I.d/2-.8);return{x:+x.toFixed(2),z:+z.toFixed(2),ry:+ry.toFixed(2)};}
 function placeItem(id,I){let x=P.x+Math.sin(P.ry)*1.8-I.ox,z=P.z+Math.cos(P.ry)*1.8-I.oz,ry=P.ry+Math.PI,y=0;
  if(id==='f_paint'){const dN=z+I.d/2,dS=I.d/2-z,dW=x+I.w/2,dE=I.w/2-x,m=Math.min(dN,dS,dW,dE);
   if(m===dN){z=-I.d/2+.2;ry=0;}else if(m===dS){z=I.d/2-.2;ry=Math.PI;}else if(m===dW){x=-I.w/2+.2;ry=Math.PI/2;}else{x=I.w/2-.2;ry=-Math.PI/2;}}
@@ -1085,7 +1101,7 @@ function rebuildStalls(){const I=INT.kenyon;if(!I||!I.stalls)return;const G=I.st
  SHOPPLOTS.forEach((P0,k)=>{const x=-24.3+(k+3)*5.4,z=3,s=k<7?shopState(k):null,colr=s?(s.color==null?0xd9c8a8:s.color):0x77777f;
   counter(G,x,z,4);box(4.3,.12,1.7,M(colr),x,3,z-.3,G,false);[-2,2].forEach(dx=>box(.12,3,.12,M(0x444444),x+dx,1.5,z-.8,G));
   const sg=new THREE.Mesh(new THREE.PlaneGeometry(3.9,.85),new THREE.MeshStandardMaterial({map:signTex(s?s.name:'דוכן פנוי '+(k+1),s?'#2a1a40':'#444','#ffd978'),roughness:.6}));sg.position.set(x,3.55,z-.8);G.add(sg);
-  if(s){npc(G,NPCS.clerk,x,z-1.3,0);A(x,z+1.7,'🛒 '+s.name+(s.mine?' (שלך)':' – של '+s.owner),()=>shop(SHOPKIND[s.type]||'wands'),2.4);if(s.mine)A(x,z+3.4,'⚙️ ניהול החנות שלי',()=>shopManage(k),1.5);}
+  if(s){npc(G,NPCS.clerk,x,z-1.3,0);A(x,z+1.7,'🛒 '+s.name+(s.mine?' (שלך)':' – של '+s.owner),()=>shop(SHOPKIND[s.type]||'wands',{items:s.items,names:s.names,pid:s.pid,owner:s.owner,mine:!!s.mine,title:s.name}),2.4);if(s.mine)A(x,z+3.4,'⚙️ ניהול החנות שלי',()=>shopManage(k),1.5);}
   else A(x,z+1.7,'🏪 דוכן פנוי – לפתוח חנות',()=>shopStart(k),2.4);});}
 function buildShopPlot(k){rebuildStalls();}
 function buildShopPlots(){rebuildStalls();}
@@ -1121,7 +1137,7 @@ async function fetchWorld(){if(!DB)return;
   SHOPPLOTS.forEach((p,k)=>{if((!S.shop||S.shop.plot!==k)&&JSON.stringify(s0[k])!==JSON.stringify(ns[k]))buildShopPlot(k);});
  }catch(e){}}
 function pubShop(){try{if(typeof netPubWorld==='function')netPubWorld();}catch(e){}if(!DB||S.ch==null)return;try{const s=S.shop,p=DB.collection('shops').doc(CH[S.ch].id).set(s?{plot:s.plot,type:s.type,name:s.name,color:s.color,nick:S.nick||CH[S.ch].name,t:Date.now()}:{plot:-1,t:Date.now()});if(p&&p.catch)p.catch(()=>{});}catch(e){}}
-function shopTick(){const s=S.shop;if(!s)return;const now=Date.now(),dt=Math.min(Math.max(0,(now-(s.t||now))/1000),7200);s.t=now;s.cash=Math.min(600,(s.cash||0)+dt*.0667);}
+function shopTick(){const s=S.shop;if(!s)return;const now=Date.now(),dt=Math.min(Math.max(0,(now-(s.t||now))/1000),7200);s.t=now;if((s.cash||0)<600)s.cash=Math.min(600,(s.cash||0)+dt*.0667);}
 function worldInit(){fetchWorld();setInterval(fetchWorld,25000);shopTick();setInterval(()=>{shopTick();saveSoon();},10000);}
 buildAllPlots();buildShopPlots();
 </script>
@@ -1196,15 +1212,17 @@ function netPubWorld(){clearTimeout(netPubWorld.t);netPubWorld.t=setTimeout(()=>
  if(!S.pid){S.pid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);try{saveSoon();}catch(e){}}
  const nk=(S.nick||CH[S.ch].name||'').slice(0,16);
  const hm=(typeof S.home==='number')?{home:S.home,tier:S.tier,style:S.style,wall:S.wall,roof:S.roof,md:S.md,nick:nk}:null;
- const sh=S.shop?{plot:S.shop.plot,type:S.shop.type,name:String(S.shop.name||'').slice(0,16),color:S.shop.color,nick:nk}:null;
+ const sh=S.shop?{plot:S.shop.plot,type:S.shop.type,name:String(S.shop.name||'').slice(0,16),color:S.shop.color,nick:nk,items:S.shop.items||null,names:S.shop.names||null}:null;
  try{c.publish(MQ_T+'/w/'+S.pid,JSON.stringify({h:hm,s:sh,t:Date.now()}),{qos:0,retain:true});}catch(e){}},400);}
 function netWorldMsg(pid,m){if(!pid||pid.length>24||(S.pid&&pid===S.pid))return;NETW[pid]=m;clearTimeout(netWorldMsg.t);netWorldMsg.t=setTimeout(netApplyWorld,350);}
+function cleanItems(o){if(!o||typeof o!=='object')return null;const r={};let n=0;for(const k in o){if(n>=40||!/^[a-z0-9_]{1,20}$/i.test(k))continue;const v=+o[k];if(isFinite(v)){r[k]=Math.max(1,Math.min(9999,Math.round(v)));n++;}}return n?r:null;}
+function cleanNames(o){if(!o||typeof o!=='object')return null;const r={};let n=0;for(const k in o){if(n>=40||!/^[a-z0-9_]{1,20}$/i.test(k)||typeof o[k]!=='string')continue;r[k]=o[k].slice(0,14);n++;}return n?r:null;}
 function netApplyWorld(){try{const no={},ns={},num=v=>typeof v==='number'&&isFinite(v)?v:null,str=(v,d)=>typeof v==='string'?v.slice(0,16):d;
  for(const pid in NETW){const m=NETW[pid];if(!m)continue;
   const d=m.h;if(d&&typeof d.home==='number'&&HOMES[d.home]&&d.home!==S.home){const t=Math.max(0,Math.min(2,d.tier|0));
    if((HOMES[d.home].kind==='mansion')===(t===2)){const sty=['regular','bricks','palace'].includes(d.style)?d.style:'regular',md=['classic','modern','villa'].includes(d.md)?d.md:'classic';
     no[d.home]={tier:t,style:sty,wall:num(d.wall),roof:num(d.roof),md,owner:str(d.nick,'שחקן')};}}
-  const q=m.s;if(q&&typeof q.plot==='number'&&q.plot>=0&&q.plot<7&&SHOPPLOTS[q.plot]&&typeof q.type==='string'&&(!S.shop||S.shop.plot!==q.plot))ns[q.plot]={type:q.type.slice(0,10),name:str(q.name,'חנות'),color:num(q.color),owner:str(q.nick,'שחקן')};}
+  const q=m.s;if(q&&typeof q.plot==='number'&&q.plot>=0&&q.plot<7&&SHOPPLOTS[q.plot]&&typeof q.type==='string'&&(!S.shop||S.shop.plot!==q.plot))ns[q.plot]={type:q.type.slice(0,10),name:str(q.name,'חנות'),color:num(q.color),owner:str(q.nick,'שחקן'),pid,items:cleanItems(q.items),names:cleanNames(q.names)};}
  const o0=OCC,s0=SOCC;OCC=no;SOCC=ns;
  HOMES.forEach((H,i)=>{if(i!==S.home&&JSON.stringify(o0[i])!==JSON.stringify(no[i])){try{buildPlot(i);}catch(e){}}});
  SHOPPLOTS.forEach((p,k)=>{if((!S.shop||S.shop.plot!==k)&&JSON.stringify(s0[k])!==JSON.stringify(ns[k])){try{buildShopPlot(k);}catch(e){}}});
@@ -1324,8 +1342,9 @@ async function estateMenu(){
   openPanel('🏡 הנדל״ן',nodes,()=>pvStop());}
  function apply(owned,price){if(sel.lot==null){toast('אין מגרש פנוי');return;}
   if(!owned){if(S.money<price){toast('אין מספיק כסף – צריך ₪'+price.toLocaleString());return;}S.money-=price;S.deeds.push(sel.tier);updHud();}
-  const old=S.home;S.home=sel.lot;S.tier=sel.tier;S.style=sel.style;S.wall=sel.wall;S.roof=sel.roof;S.md=sel.md;
-  if(old!==S.home)buildPlot(old);buildPlot(S.home);save();pubHouse();toast('🏡 עודכן! '+HOMES[S.home].name);build();}
+  const old=S.home,oldT=TIERS[S.tier]||TIERS[0];S.home=sel.lot;S.tier=sel.tier;S.style=sel.style;S.wall=sel.wall;S.roof=sel.roof;S.md=sel.md;
+  {const nt=TIERS[S.tier=sel.tier]||TIERS[0];if(nt!==oldT&&S.placed&&S.placed.length){const fx=nt.iw/oldT.iw,fz=nt.ind/oldT.ind;S.placed.forEach(p=>{p.x=+(p.x*fx).toFixed(2);p.z=+(p.z*fz).toFixed(2);if(S.tier!==2)p.fl=0;});}}
+  if(old!==S.home)buildPlot(old);buildPlot(S.home);try{if(INT['house'+S.home])renderItems(INT['house'+S.home],S.placed);}catch(e){}save();pubHouse();toast('🏡 עודכן! '+HOMES[S.home].name);build();}
  build();}
 /* ---------- avatar preview ---------- */
 const AV={r:null,on:false,ang:.4,cv:null,g:null};
@@ -1393,9 +1412,27 @@ function shopManage(k){const s=S.shop;if(!s)return;shopTick();
  const cash=Math.floor(s.cash||0);
  openPanel('⚙️ ניהול החנות',[h('div',{style:'margin-bottom:6px'},['חנות: '+s.name+' · דוכן '+(k+1)+' במרכז הקהילתי']),
   row('💰 הכנסות מלקוחות: ₪'+cash,'גבה',()=>{const c=Math.floor(s.cash||0);if(c<1){toast('עוד אין הכנסות');return;}s.cash-=c;S.money+=c;updHud();save();toast('גבית ₪'+c+' 🎉');shopManage(k);}),
+  row('🛍️ מוצרים ומחירים','ערוך',()=>shopProducts(k)),
   lab('שנה שם'),inp,h('button',{class:'btn',style:'margin-top:6px',on:()=>{s.name=(inp.value||'').trim().slice(0,16)||s.name;buildShopPlot(k);pubShop();save();toast('השם עודכן');}},['שמור שם']),
   lab('צבע החנות'),swatches(WALLC,s.color,c=>{s.color=c;buildShopPlot(k);pubShop();save();shopManage(k);}),
   h('button',{class:'btn',style:'width:100%;margin-top:12px;background:rgba(120,30,30,.8)',on:()=>{S.money+=Math.floor(LICENSE/2)+Math.floor(s.cash||0);S.shop=null;updHud();buildShopPlot(k);pubShop();save();closePanel();if(place==='pshop'+k)leave();toast('החנות נסגרה, קיבלת ₪'+(LICENSE/2)+' בחזרה');}},['🗑️ סגור חנות (החזר ₪'+LICENSE/2+')'])]);}
+function shopProducts(k){const s=S.shop;if(!s)return;const kind=SHOPKIND[s.type]||'wands';const lists={wands:WANDS,clothes:CLOTHES,furn:FURN,veh:VEHS};
+ const list=lists[kind].filter(it=>it.p>0||kind==='furn');const cur=s.items||{};const hasCust=Object.keys(cur).length>0;
+ const st={};list.forEach(it=>{st[it.id]={on:hasCust?cur[it.id]!=null:true,p:hasCust&&cur[it.id]!=null?cur[it.id]:it.p,n:(s.names&&s.names[it.id])||it.n};});
+ const nodes=[h('div',{style:'font-size:13px;opacity:.85;margin-bottom:8px;line-height:1.5'},['בחרו אילו מוצרים למכור, שנו שם ומחיר. כשחבר קונה אצלך, הכסף מגיע להכנסות החנות (אם אתם מחוברים באותו רגע).'])];
+ const ist='width:70px;padding:6px;border-radius:8px;border:1px solid #ffd97899;background:rgba(255,255,255,.1);color:#fff;font-size:15px;text-align:center';
+ list.forEach(it=>{const o=st[it.id];
+  const cb=h('input',{type:'checkbox',style:'width:22px;height:22px'});cb.checked=o.on;cb.addEventListener('change',()=>o.on=cb.checked);
+  const nm=h('input',{type:'text',maxlength:'14',value:o.n,style:'width:110px;padding:6px;border-radius:8px;border:1px solid #ffd97899;background:rgba(255,255,255,.1);color:#fff;font-size:14px;direction:rtl'});nm.addEventListener('input',()=>o.n=nm.value);
+  const pr=h('input',{type:'number',inputmode:'numeric',value:String(o.p),style:ist});pr.addEventListener('input',()=>o.p=+pr.value||0);
+  [nm,pr].forEach(e=>{e.addEventListener('keydown',ev=>ev.stopPropagation());e.addEventListener('keyup',ev=>ev.stopPropagation());});
+  nodes.push(h('div',{class:'row',style:'gap:6px;align-items:center'},[cb,nm,h('span',0,['₪']),pr]));});
+ nodes.push(h('button',{class:'btn',style:'width:100%;margin-top:10px;padding:12px;font-size:17px',on:()=>{const items={},names={};let n=0;
+  list.forEach(it=>{const o=st[it.id];if(!o.on)return;items[it.id]=Math.max(1,Math.min(9999,Math.round(o.p)||it.p));const nn=(o.n||'').trim().slice(0,14);if(nn&&nn!==it.n)names[it.id]=nn;n++;});
+  if(!n){toast('בחרו לפחות מוצר אחד');return;}
+  s.items=items;s.names=names;pubShop();buildShopPlot(k);save();toast('המוצרים והמחירים נשמרו ✔');shopManage(k);}},['💾 שמור']));
+ nodes.push(h('button',{class:'btn',style:'width:100%;margin-top:6px',on:()=>{delete s.items;delete s.names;pubShop();buildShopPlot(k);save();shopManage(k);}},['↩️ חזרה לברירת המחדל']));
+ openPanel('🛍️ מוצרים ומחירים',nodes);}
 /* ---------- real jobs: serve customers in the shop, collect trash in the street ---------- */
 const JOB={on:false,stop:null,lock:false};
 function testDrive(v){if(JOB.on||PP.on||Q.on||TD.on)return;closePanel();if(place!=='out')leave();
