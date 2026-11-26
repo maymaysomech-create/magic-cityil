@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;font-family:sy
   <div id="chars" style="display:none"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>const BUILD="1795714946";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
+<script>const BUILD="1795715019";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -1298,40 +1298,47 @@ const SWX0=74.5,SWX1=94;
 function swimHud(txt){let b=document.getElementById('swHud');if(!b){b=document.createElement('div');b.id='swHud';b.style.cssText='position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:61;background:#0b3a6e;border:2px solid #7fd4ff;border-radius:16px;padding:8px 14px;color:#fff;font-size:18px;font-weight:700;display:none;align-items:center;gap:10px;max-width:92vw;direction:rtl;box-shadow:0 6px 20px #0008';
   const t=document.createElement('span');t.id='swTxt';b.appendChild(t);const x=document.createElement('button');x.className='btn';x.textContent='✖ יציאה';x.style.cssText='padding:6px 10px;font-size:14px';x.onclick=()=>swimEnd('quit');b.appendChild(x);document.body.appendChild(b);}
  if(txt==null){b.style.display='none';return;}document.getElementById('swTxt').textContent=txt;b.style.display='flex';}
-function swimMenu(){openPanel('🏊 מרוץ שחייה',[h('div',{style:'line-height:1.6;margin-bottom:10px'},['שחו לקצה השני של הבריכה וחזרה. מי שחוזר ראשון מנצח וזוכה ב־₪30! חברים מחוברים עכשיו: '+Object.keys(peers).length]),
-  h('button',{class:'btn',style:'width:100%;padding:12px;font-size:17px',on:swimWait},['🧑‍🤝‍🧑 חפש יריב (הזמנה לכל החברים)'])]);}
+function swimMenu(){openPanel('🏊 מרוץ שחייה',[h('div',{style:'line-height:1.6;margin-bottom:10px'},['שחו לקצה השני של הבריכה וחזרה. מי שחוזר ראשון מנצח! נגד חבר הפרס ₪30, נגד המחשב ₪15. חברים מחוברים עכשיו: '+Object.keys(peers).length]),
+  h('button',{class:'btn',style:'width:100%;padding:12px;font-size:17px;margin-bottom:8px',on:swimBot},['🤖 נגד המחשב']),
+  h('button',{class:'btn',style:'width:100%;padding:12px;font-size:17px',on:swimWait},['🧑‍🤝‍🧑 נגד חבר (הזמנה לכל החברים)'])]);}
 function swimWait(){if(!ROOM){toast('מרוץ מול חבר דורש חיבור לחדר',true);return;}
  SWM.wait=true;SWM.q={state:'wait',g:'swim'};sendPresence();
  openPanel('⏳ מחכים ליריב…',[h('div',{style:'line-height:1.6'},['כל החברים המחוברים רואים הזמנה למרוץ. ברגע שחבר מצטרף – המרוץ מתחיל.']),h('button',{class:'btn',style:'width:100%;margin-top:8px',on:()=>{closePanel();}},['ביטול'])],()=>{if(SWM.wait&&!SWM.on)swimCancel();});
  clearTimeout(SWM.tm);SWM.tm=setTimeout(()=>{if(SWM.wait&&!SWM.on){swimCancel();closePanel();toast('לא נמצא יריב כרגע');}},90000);}
+function swimBot(){if(SWM.on||PP.on||Q.on||PW.play)return;closePanel.cb=null;$('pn').classList.remove('on');SWM.mode='bot';SWM.bsp=1.9+Math.random()*.55;SWM.bt=39/SWM.bsp;
+ try{SWM.bav=makeAvatar(Object.assign({},CH[1]),{robe:'r_black',hat:'h_none',scarf:'s_red',wand:'w_basic',nick:'מחשב 🤖'});scene.add(SWM.bav);SWM.bav.position.set(SWX0,-.55,30.5);SWM.bav.rotation.y=Math.PI/2;}catch(e){SWM.bav=null;}
+ swimStart('bot');}
 function swimCancel(){SWM.wait=false;if(!SWM.on)SWM.q=null;clearTimeout(SWM.tm);try{sendPresence();}catch(e){}}
-function swimStart(opp){if(SWM.on||PP.on||Q.on||PW.play)return;SWM.wait=false;clearTimeout(SWM.tm);closePanel.cb=null;$('pn').classList.remove('on');
+function swimStart(opp){if(SWM.on||PP.on||Q.on||PW.play)return;if(opp!=='bot')SWM.mode='human';SWM.wait=false;clearTimeout(SWM.tm);closePanel.cb=null;$('pn').classList.remove('on');
  if(place!=='out')leave();P.riding=false;try{setRide();}catch(e){}
- SWM.on=true;SWM.opp=opp;SWM.my=null;SWM.op=null;SWM.phase='count';SWM.q={state:'play',opp,g:'swim'};
- P.x=SWX0;P.z=SID<opp?25.5:30.5;P.y=-.55;P.ry=Math.PI/2;P.vx=0;P.vz=0;
+ SWM.on=true;SWM.opp=opp;SWM.my=null;SWM.op=null;SWM.phase='count';SWM.q=(opp==='bot')?null:{state:'play',opp,g:'swim'};
+ P.x=SWX0;P.z=(opp==='bot')?25.5:(SID<opp?25.5:30.5);P.y=-.55;P.ry=Math.PI/2;P.vx=0;P.vz=0;
  let n=3;swimHud('מוכנים… '+n);
  const cd=setInterval(()=>{if(!SWM.on){clearInterval(cd);return;}n--;if(n>0)swimHud('מוכנים… '+n);else{clearInterval(cd);SWM.phase='out';SWM.t0=performance.now();P.x=SWX0;swimHud('🏊 שחו!');}},1000);
  clearInterval(SWM.iv);SWM.iv=setInterval(swimTick,50);try{sendPresence();}catch(e){}}
 function swimRecv(d){if(!d||d.to!==SID||d.from!==SWM.opp||!SWM.on)return;SWM.op=+d.time||999;SWM.opfin=Date.now();}
-function swimTick(){if(!SWM.on)return;
+function swimBotStep(){if(SWM.mode!=='bot'||!SWM.bav||(SWM.phase!=='out'&&SWM.phase!=='back'&&SWM.phase!=='done'))return;const el=(performance.now()-SWM.t0)/1000;let x;
+ if(el>=SWM.bt){x=SWX0;if(SWM.op==null){SWM.op=SWM.bt;SWM.opfin=Date.now();}}else{const d=el*SWM.bsp;x=d<=19.5?SWX0+d:SWX1-(d-19.5);}
+ SWM.bav.position.x=x;SWM.bav.rotation.y=(el<SWM.bt&&el*SWM.bsp>19.5)?-Math.PI/2:Math.PI/2;try{animAv(SWM.bav,el<SWM.bt?3:0,P.t,'swim');}catch(e){}}
+function swimTick(){if(!SWM.on)return;swimBotStep();
  if(SWM.phase==='out'||SWM.phase==='back'){const el=(performance.now()-SWM.t0)/1000;
   swimHud('⏱ '+el.toFixed(1)+(SWM.phase==='out'?' – שחו לקצה השני ➡️':' – ועכשיו חזרה! ⬅️'));
   if(SWM.phase==='out'&&P.x>=SWX1)SWM.phase='back';
-  else if(SWM.phase==='back'&&P.x<=SWX0){SWM.my=el;SWM.phase='done';SWM.fin=Date.now();swimHud('סיימת ב־'+el.toFixed(1)+' שנ׳ – מחכים ליריב…');try{ROOM.emit('swim',{to:SWM.opp,from:SID,time:el});}catch(e){}}
+  else if(SWM.phase==='back'&&P.x<=SWX0){SWM.my=el;SWM.phase='done';SWM.fin=Date.now();swimHud('סיימת ב־'+el.toFixed(1)+' שנ׳ – מחכים ליריב…');if(SWM.mode!=='bot'){try{ROOM.emit('swim',{to:SWM.opp,from:SID,time:el});}catch(e){}}}
   if(el>120){swimEnd('timeout');return;}}
  if(SWM.my!=null&&SWM.op!=null)swimEnd('both');
  else if(SWM.my!=null&&Date.now()-SWM.fin>45000)swimEnd('oppslow');
  else if(SWM.op!=null&&SWM.my==null&&Date.now()-SWM.opfin>60000)swimEnd('late');
  else if(SWM.phase==='count'&&false){}}
-function swimEnd(why){if(!SWM.on)return;const my=SWM.my,op=SWM.op;SWM.on=false;SWM.wait=false;SWM.q=null;clearInterval(SWM.iv);swimHud(null);try{sendPresence();}catch(e){}
+function swimEnd(why){if(!SWM.on)return;try{if(SWM.bav){scene.remove(SWM.bav);SWM.bav=null;}}catch(e){}const rw=SWM.mode==='bot'?15:30;const my=SWM.my,op=SWM.op;SWM.on=false;SWM.wait=false;SWM.q=null;clearInterval(SWM.iv);swimHud(null);try{sendPresence();}catch(e){}
  if(why==='quit'){toast('יצאת מהמרוץ');return;}
  let title,msg;
- if(why==='both'){if(my<op){title='🏆 ניצחת במרוץ!';msg='הזמן שלך: '+my.toFixed(1)+' · היריב: '+op.toFixed(1)+'. קיבלת ₪30!';money(30);}else if(my>op){title='😅 היריב ניצח';msg='הזמן שלך: '+my.toFixed(1)+' · היריב: '+op.toFixed(1);}else{title='🤝 תיקו';msg='שניכם סיימתם באותו זמן';}}
- else if(why==='oppslow'){title='🏆 ניצחת במרוץ!';msg='היריב לא סיים. קיבלת ₪30!';money(30);}
+ if(why==='both'){if(my<op){title='🏆 ניצחת במרוץ!';msg='הזמן שלך: '+my.toFixed(1)+' · היריב: '+op.toFixed(1)+'. קיבלת ₪'+rw+'!';money(rw);}else if(my>op){title='😅 היריב ניצח';msg='הזמן שלך: '+my.toFixed(1)+' · היריב: '+op.toFixed(1);}else{title='🤝 תיקו';msg='שניכם סיימתם באותו זמן';}}
+ else if(why==='oppslow'){title='🏆 ניצחת במרוץ!';msg='היריב לא סיים. קיבלת ₪'+rw+'!';money(rw);}
  else if(why==='late'){title='😅 היריב ניצח';msg='היריב סיים לפניך.';}
  else{title='המרוץ הסתיים';msg='לא הצלחתם לסיים בזמן.';}
  openPanel(title,[h('div',{style:'font-size:18px;margin:10px 0;line-height:1.6'},[msg])]);}
-zone([72,96,22,34],'🏊 מרוץ שחייה מול חבר',()=>swimMenu(),84,28);
+zone([72,96,22,34],'🏊 מרוץ שחייה',()=>swimMenu(),84,28);
 </script>
 <script>
 /* ---------- preview, real estate, registration, own shops ---------- */
