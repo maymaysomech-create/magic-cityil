@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;font-family:sy
   <div id="chars" style="display:none"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>const BUILD="1795715019";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
+<script>const BUILD="1795715229";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -717,7 +717,7 @@ function rhythmGame(kind){const C=RH[kind];mgOpen(C.title);const W=300,H=400,cv=
  loop();$('mgInfo').textContent='לחצו על העיגול כשהטבעת הלבנה נוגעת בו';}
 function startClub(k){if(PP.on||Q.on)return;rhythmGame(k);}
 function startGame(k){if(k==='tennis'||k==='pingpong')pongMenu(k);
- else if(k==='swim')swimGame();else if(k==='target')targetMenu();}
+ else if(k==='swim')swimMenu();else if(k==='target')targetMenu();}
 function pong(cfg){mgOpen(cfg.title);const W=300,H=440,cv=h('canvas',{id:'pong',width:W,height:H},[]);$('mgBody').appendChild(cv);const g=cv.getContext('2d');
  let px=W/2,bx=W/2,bot=W/2,ball,sc=[0,0],wait=1,over=false;const R=8;
  function serve(dir){ball={x:W/2,y:H/2,vx:rnd(-90,90),vy:dir*cfg.sp*.75};}serve(1);
@@ -1299,8 +1299,9 @@ function swimHud(txt){let b=document.getElementById('swHud');if(!b){b=document.c
   const t=document.createElement('span');t.id='swTxt';b.appendChild(t);const x=document.createElement('button');x.className='btn';x.textContent='✖ יציאה';x.style.cssText='padding:6px 10px;font-size:14px';x.onclick=()=>swimEnd('quit');b.appendChild(x);document.body.appendChild(b);}
  if(txt==null){b.style.display='none';return;}document.getElementById('swTxt').textContent=txt;b.style.display='flex';}
 function swimMenu(){openPanel('🏊 מרוץ שחייה',[h('div',{style:'line-height:1.6;margin-bottom:10px'},['שחו לקצה השני של הבריכה וחזרה. מי שחוזר ראשון מנצח! נגד חבר הפרס ₪30, נגד המחשב ₪15. חברים מחוברים עכשיו: '+Object.keys(peers).length]),
-  h('button',{class:'btn',style:'width:100%;padding:12px;font-size:17px;margin-bottom:8px',on:swimBot},['🤖 נגד המחשב']),
-  h('button',{class:'btn',style:'width:100%;padding:12px;font-size:17px',on:swimWait},['🧑‍🤝‍🧑 נגד חבר (הזמנה לכל החברים)'])]);}
+  h('button',{class:'btn',style:'width:100%;padding:12px;font-size:17px;margin-bottom:8px',on:swimBot},['🤖 נגד המחשב – בתוך הבריכה']),
+  h('button',{class:'btn',style:'width:100%;padding:12px;font-size:17px',on:swimWait},['🧑‍🤝‍🧑 נגד חבר (הזמנה לכל החברים)']),
+  h('button',{class:'btn',style:'width:100%;padding:12px;font-size:17px;margin-top:8px',on:()=>{closePanel();swimGame();}},['🎮 מירוץ קצר – לחיצות על הכפתורים (נגד המחשב)'])]);}
 function swimWait(){if(!ROOM){toast('מרוץ מול חבר דורש חיבור לחדר',true);return;}
  SWM.wait=true;SWM.q={state:'wait',g:'swim'};sendPresence();
  openPanel('⏳ מחכים ליריב…',[h('div',{style:'line-height:1.6'},['כל החברים המחוברים רואים הזמנה למרוץ. ברגע שחבר מצטרף – המרוץ מתחיל.']),h('button',{class:'btn',style:'width:100%;margin-top:8px',on:()=>{closePanel();}},['ביטול'])],()=>{if(SWM.wait&&!SWM.on)swimCancel();});
@@ -1338,7 +1339,6 @@ function swimEnd(why){if(!SWM.on)return;try{if(SWM.bav){scene.remove(SWM.bav);SW
  else if(why==='late'){title='😅 היריב ניצח';msg='היריב סיים לפניך.';}
  else{title='המרוץ הסתיים';msg='לא הצלחתם לסיים בזמן.';}
  openPanel(title,[h('div',{style:'font-size:18px;margin:10px 0;line-height:1.6'},[msg])]);}
-zone([72,96,22,34],'🏊 מרוץ שחייה',()=>swimMenu(),84,28);
 </script>
 <script>
 /* ---------- preview, real estate, registration, own shops ---------- */
