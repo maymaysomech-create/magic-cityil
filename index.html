@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;font-family:sy
   <div id="chars" style="display:none"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>const BUILD="1795719226";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
+<script>const BUILD="1795757392";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -1224,6 +1224,10 @@ const MQ_URLS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mq
 function netLoadMq(cb){if(window.mqtt)return cb(true);const urls=['https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js','https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js'];let i=0;
  (function next(){if(i>=urls.length)return cb(false);const sc=document.createElement('script');sc.src=urls[i++];sc.onload=()=>window.mqtt?cb(true):next();sc.onerror=next;document.head.appendChild(sc);})();}
 let mqLast=0;
+const RQ={};
+function rqSend(t,n){const c=NET.mq;if(!c||!c.connected)return false;try{const id='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);c.publish(MQ_T+'/rq/'+id,JSON.stringify({n:String(n||'חבר').slice(0,20),t:String(t).slice(0,200),at:Date.now()}),{qos:1,retain:true});return true;}catch(e){return false;}}
+function rqWatch(){const c=NET.mq;if(c&&c.connected){try{c.subscribe(MQ_T+'/rq/+',{qos:0});}catch(e){}return true;}return false;}
+function rqDel(id){const c=NET.mq;if(c&&c.connected){try{c.publish(MQ_T+'/rq/'+id,'',{qos:1,retain:true});}catch(e){}}delete RQ[id];}
 function mqPub(sub,obj,throttle){const c=NET.mq;if(!c||!c.connected)return;const now=Date.now();if(throttle){if(now-mqLast<190)return;mqLast=now;}try{c.publish(MQ_T+sub,JSON.stringify(obj),{qos:0});}catch(e){}}
 function mqGone(sid){if(NET.states[sid]){delete NET.states[sid];delete NET.seen[sid];NET.dirty=true;}}
 function netMqtt(done){netLeave(true);netLoadMq(ok=>{if(!ok){done('load');return;}let idx=0,fin=false;
@@ -1233,6 +1237,7 @@ function netMqtt(done){netLeave(true);netLoadMq(ok=>{if(!ok){done('load');return
   cl.on('error',()=>{});
   cl.on('message',(topic,buf)=>{let m=null;const raw=String(buf);
    if(topic===MQ_T+'/bye'){mqGone(raw);return;}
+   if(topic.indexOf(MQ_T+'/rq/')===0){const id=topic.slice(MQ_T.length+4);if(!raw){delete RQ[id];}else{try{const o=JSON.parse(raw);if(o&&typeof o.t==='string')RQ[id]={n:String(o.n||'חבר').slice(0,20),t:o.t.slice(0,200),at:+o.at||0};}catch(e){}}return;}
    try{m=JSON.parse(raw);}catch(e){return;}if(!m||typeof m!=='object')return;
    if(topic.indexOf(MQ_T+'/w/')===0){netWorldMsg(topic.slice(MQ_T.length+3),m);return;}
    if(topic===MQ_T+'/p'){const st=m.s;if(!st||typeof st.sid!=='string'||st.sid===SID||st.sid.length>20)return;NET.states[st.sid]=st;NET.seen[st.sid]=Date.now();NET.dirty=true;}
@@ -1562,17 +1567,26 @@ async function requestBox(){
  const list=h('div',{style:'margin-top:12px'},[]);
  async function send(){const t=(inp.value||'').trim().slice(0,200);if(!t){toast('כתבו משהו קודם');return;}
   if(t==='מאיה-400'){S.money=400;updHud();saveSoon();inp.value='';toast('💰 יש לך ₪400!');return;}
-  if(!DB||UID==='local'){waShare(t);inp.value='';toast('📲 לחצו שלח בווצאפ כדי שהבקשה תגיע');return;}
+  if(t==='מאיה-בקשות'){S.rqOwner=1;saveSoon();inp.value='';mine();return;}
+  if(!DB||UID==='local'){if(rqSend(t,S.nick)){inp.value='';toast('📮 הבקשה נשלחה!');if(S.rqOwner)setTimeout(mine,800);}else{waShare(t);inp.value='';toast('📲 אין חיבור לשרת – שלחו בווצאפ');}return;}
   try{const ref=DB.collection('requests').doc(UID);let items=[];try{const s=await ref.get();const d=dat(s);if(d&&Array.isArray(d.items))items=d.items;}catch(e){}
    items.push({t,at:Date.now()});items=items.slice(-20);await ref.set({name:S.nick||CH[S.ch].name,items});inp.value='';toast('📮 הבקשה נשלחה!');if(owner)load();}catch(e){waShare(t);toast('📲 שלחו את הבקשה בווצאפ');}}
+ function mine(){list.innerHTML='';if(!rqWatch()){list.appendChild(h('div',{style:'opacity:.8'},['אין חיבור לשרת כרגע – נסי שוב עוד רגע.']));return;}
+  list.appendChild(h('div',{style:'opacity:.8'},['טוען בקשות…']));
+  const draw=()=>{list.innerHTML='';const rows=Object.keys(RQ).map(id=>Object.assign({id},RQ[id])).sort((a,b)=>b.at-a.at);
+   list.appendChild(h('div',{style:'color:#ffd978;font-weight:700;margin-bottom:6px'},['📥 הבקשות שקיבלת ('+rows.length+')']));
+   if(!rows.length)list.appendChild(h('div',{style:'opacity:.8'},['עוד לא כתבו בקשות.']));
+   rows.forEach(r=>{const row_=h('div',{class:'row',style:'display:block'},[]);row_.appendChild(h('div',{style:'font-weight:700'},[r.n+' · '+new Date(r.at).toLocaleDateString('he-IL')]));row_.appendChild(h('div',{style:'margin:4px 0 6px;line-height:1.4'},[r.t]));
+    row_.appendChild(h('button',{class:'btn',style:'padding:5px 10px;font-size:13px',on:()=>{rqDel(r.id);draw();}},['✔ טופל / מחק']));list.appendChild(row_);});};
+  setTimeout(draw,2500);setTimeout(draw,6000);}
  async function load(){list.innerHTML='';if(!DB)return;
   try{const snap=await DB.collection('requests').get();const rows=[];snap.docs.forEach(d=>{const v=d.data()||{};(v.items||[]).forEach((it,i)=>rows.push({id:d.id,i,name:v.name||'חבר',t:it.t,at:it.at,v}));});
    rows.sort((a,b)=>b.at-a.at);list.appendChild(h('div',{style:'color:#ffd978;font-weight:700;margin-bottom:6px'},['📥 הבקשות שקיבלת ('+rows.length+') – רק את רואה אותן']));
    if(!rows.length)list.appendChild(h('div',{style:'opacity:.8'},['עוד לא כתבו בקשות.']));
    rows.forEach(r=>{const row_=h('div',{class:'row',style:'display:block'},[]);row_.appendChild(h('div',{style:'font-weight:700'},[r.name+' · '+new Date(r.at).toLocaleDateString('he-IL')]));row_.appendChild(h('div',{style:'margin:4px 0 6px;line-height:1.4'},[r.t]));
     row_.appendChild(h('button',{class:'btn',style:'padding:5px 10px;font-size:13px',on:async()=>{try{const items=(r.v.items||[]).filter((x,k)=>k!==r.i);await DB.collection('requests').doc(r.id).set({name:r.v.name,items});load();}catch(e){toast('לא הצלחתי למחוק');}}},['✔ טופל / מחק']));list.appendChild(row_);});}catch(e){list.appendChild(h('div',{style:'opacity:.8'},['לא הצלחתי לטעון את הבקשות.']));}}
- openPanel('📮 תיבת הבקשות',[h('div',{style:'font-size:14px;margin-bottom:8px;line-height:1.5'},[owner?'כאן החברים כותבים לך בקשות. רק את רואה אותן. אפשר גם לכתוב בעצמך.':'כתבו בקשה או רעיון לעיר. רק בעלת המשחק רואה מה כתוב כאן 📮']),inp,h('button',{class:'btn',style:'width:100%;margin-top:8px;padding:11px;font-size:16px',on:send},['📨 שלח בקשה'+((!DB||UID==='local')?' בווצאפ':'')]),list]);
- if(owner)load();}
+ openPanel('📮 תיבת הבקשות',[h('div',{style:'font-size:14px;margin-bottom:8px;line-height:1.5'},[owner?'כאן החברים כותבים לך בקשות. רק את רואה אותן. אפשר גם לכתוב בעצמך.':'כתבו בקשה או רעיון לעיר. רק בעלת המשחק רואה מה כתוב כאן 📮']),inp,h('button',{class:'btn',style:'width:100%;margin-top:8px;padding:11px;font-size:16px',on:send},['📨 שלח בקשה']),list]);
+ if(owner)load();else if(S.rqOwner)setTimeout(mine,1500);}
 /* ---------- mall rides, food, classroom ---------- */
 function eatFood(n,p){if(S.money<p){toast('אין מספיק כסף');return;}money(-p,'– '+n+' טעים! 😋');}
 const RIDING={on:false};
