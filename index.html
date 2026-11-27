@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;font-family:sy
   <div id="chars" style="display:none"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>const BUILD="1795789169";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
+<script>const BUILD="1795789398";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -1444,6 +1444,44 @@ const PASS={sid:null};
   off.style.display=PASS.sid?'block':'none';
  }catch(e){}},40);
 })();
+
+/* ---------- pet shop + following pets ---------- */
+const PETS=[
+ {k:'mouse',n:'עכבר',e:'🐭',p:0},{k:'hamster',n:'אוגר',e:'🐹',p:200},{k:'hedge',n:'קיפוד',e:'🦔',p:250},
+ {k:'fish',n:'דגים עם אקווריום',e:'🐠',p:300},{k:'cat',n:'חתול',e:'🐱',p:400},{k:'dog',n:'כלב',e:'🐶',p:800}];
+const PETM={};let petsOK=false;
+function petMesh(k){const g=new THREE.Group();const P_=(c,o)=>M(c,o||{roughness:.8});
+ if(k==='dog'){const c=0xb8793c;box(.55,.4,.95,P_(c),0,.5,0,g);sph(.27,P_(c),0,.78,.55,g);box(.2,.14,.2,P_(0x4a2a14),0,.72,.8,g);box(.12,.3,.08,P_(0x6a3a14),-.2,.82,.5,g);box(.12,.3,.08,P_(0x6a3a14),.2,.82,.5,g);
+  [[-.2,-.35],[.2,-.35],[-.2,.35],[.2,.35]].forEach(([x,z])=>cyl(.07,.07,.32,P_(c),x,.16,z,g,6));const t=box(.1,.1,.4,P_(c),0,.75,-.6,g);t.rotation.x=.7;g.userData.s=1;}
+ else if(k==='cat'){const c=0x8a8a96;box(.4,.32,.75,P_(c),0,.42,0,g);sph(.22,P_(c),0,.62,.42,g);
+  [-.12,.12].forEach(x=>{const e=new THREE.Mesh(new THREE.ConeGeometry(.07,.16,4),P_(c));e.position.set(x,.84,.42);g.add(e);});
+  [[-.14,-.28],[.14,-.28],[-.14,.28],[.14,.28]].forEach(([x,z])=>cyl(.055,.055,.26,P_(c),x,.13,z,g,6));const t=cyl(.04,.04,.6,P_(c),0,.6,-.5,g,6);t.rotation.x=-.9;}
+ else if(k==='hedge'){sph(.3,P_(0x4a3a2a),0,.3,0,g);for(let i=0;i<14;i++){const a=i*2.4,s=new THREE.Mesh(new THREE.ConeGeometry(.05,.22,4),P_(0x2a2018));s.position.set(Math.cos(a)*.22,.38+Math.sin(i)*.08,-.05+Math.sin(a)*.2);s.rotation.x=-.6;g.add(s);}sph(.13,P_(0xd8b890),0,.24,.3,g);sph(.03,P_(0x111111),0,.25,.42,g);}
+ else if(k==='hamster'){sph(.2,P_(0xe0b070),0,.2,0,g);sph(.07,P_(0xfff0d8),0,.18,.16,g);sph(.05,P_(0xe0b070),-.12,.36,.06,g);sph(.05,P_(0xe0b070),.12,.36,.06,g);}
+ else if(k==='mouse'){sph(.14,P_(0xb0b0b8),0,.14,0,g);sph(.06,P_(0xb0b0b8),0,.12,.16,g);sph(.05,P_(0xf0b0c0),-.09,.26,.04,g);sph(.05,P_(0xf0b0c0),.09,.26,.04,g);const t=cyl(.012,.012,.3,P_(0xf0b0c0),0,.1,-.25,g,4);t.rotation.x=1.4;}
+ else{const gl=new THREE.Mesh(new THREE.SphereGeometry(.28,16,12),new THREE.MeshStandardMaterial({color:0xaad8ff,transparent:true,opacity:.35,roughness:.1}));gl.position.y=.55;g.add(gl);
+  box(.5,.08,.5,P_(0x3a6a3a),0,.28,0,g);sph(.07,P_(0xff8a20),0,.55,0,g);sph(.05,P_(0xff6020),.1,.62,.05,g);}
+ return g;}
+function petsSync(){const own=(S.pets||[]);own.forEach(k=>{if(!PETM[k]){const m=petMesh(k);m.position.set(P.x+1.5,0,P.z+1.5);scene.add(m);PETM[k]={m,t:Math.random()*6};}});
+ Object.keys(PETM).forEach(k=>{if(own.indexOf(k)<0){scene.remove(PETM[k].m);delete PETM[k];}});}
+function petsTick(){try{if(typeof me==='undefined'||!me||!S.pets)return;petsSync();const ks=Object.keys(PETM);
+ ks.forEach((k,i)=>{const o=PETM[k],m=o.m;const a=P.ry+Math.PI+(i-(ks.length-1)/2)*.75,dist=1.6+((i%2)*.7);const tx=P.x+Math.sin(a)*dist,tz=P.z+Math.cos(a)*dist;
+  let dx=tx-m.position.x,dz=tz-m.position.z;const d=Math.hypot(dx,dz);if(d>14){m.position.x=tx;m.position.z=tz;dx=dz=0;}
+  const sp=Math.min(d,.14+d*.08);if(d>.12){m.position.x+=dx/d*sp;m.position.z+=dz/d*sp;m.rotation.y=Math.atan2(dx,dz);o.t+=.35;m.position.y=(P.y||0)+Math.abs(Math.sin(o.t))*.12;}else{m.position.y+=(((P.y||0))-m.position.y)*.3;}});}catch(e){}}
+setInterval(petsTick,33);
+function petMenu(){const own=S.pets||[];
+ const nodes=[h('div',{style:'font-size:14px;opacity:.9;margin-bottom:6px'},['החיות שקונים הולכות איתך בכל מקום 🐾'])];
+ PETS.forEach(p=>{const has=own.indexOf(p.k)>=0;nodes.push(row(p.e+' '+p.n+' – '+(p.p?'₪'+p.p:'חינם!')+(has?' ✅':''),has?'יש לך':'קנה',()=>{if(has)return;if(S.money<p.p){toast('אין מספיק כסף – צריך ₪'+p.p);return;}if(p.p)money(-p.p);S.pets=(S.pets||[]).concat([p.k]);saveSoon();toast(p.e+' קנית '+p.n+'!');petMenu();},has));});
+ if(own.length)nodes.push(h('button',{class:'btn',style:'width:100%;margin-top:8px;padding:9px',on:()=>{const k=own[own.length-1],p=PETS.find(x=>x.k===k);if(p){S.pets=own.filter(x=>x!==k);saveSoon();petMenu();}}},['🕊️ שחרר את החיה האחרונה']));
+ openPanel('🐾 חנות חיות מחמד',nodes);}
+function petShopInit(){if(petsOK)return;petsOK=true;
+ buildExt({int:'pets',name:'חנות חיות מחמד',x:-4,z:-62,w:12,d:12,h:6,wall:0xcdeccd,roof:0x2f8a5a,face:'s',sw:-51.5,signBg:'#0f5a3a',signFg:'#fff',mc:'#8f8'});
+ makeRoom('pets',14,11,10,{wall:0xd8efd0});const I=INT.pets,g=I.g;
+ box(7,1,1.4,M(0x6a4a2a),0,.5,-3.6,g);box(7.2,.12,1.6,M(0x9a6a3a),0,1.02,-3.6,g);npc(g,NPCS.clerk,0,-4.6,0);
+ [[-5.6,-3.8,'dog'],[-4.2,-3.8,'cat'],[4.2,-3.8,'hedge'],[5.6,-3.8,'fish'],[-5.6,0,'hamster'],[5.6,0,'mouse']].forEach(([x,z,k])=>{box(1.4,.6,1.4,M(0x8a6a3a),x,.3,z,g);const m=petMesh(k);m.position.set(x,.6,z);g.add(m);});
+ I.acts.push({x:I.ox,z:I.oz-2.2,r:3.4,label:'🐾 קנה חיית מחמד',run:()=>petMenu()});
+ POIS.push({n:'חיות מחמד',x:-4,z:-49,c:'#8f8'});}
+try{petShopInit();}catch(e){console.error('petShop',e);}
 </script>
 <script>
 /* ---------- preview, real estate, registration, own shops ---------- */
