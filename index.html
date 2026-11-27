@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;font-family:sy
   <div id="chars" style="display:none"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>const BUILD="1795789630";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
+<script>const BUILD="1795789756";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -1238,6 +1238,7 @@ function netMqtt(done){netLeave(true);netLoadMq(ok=>{if(!ok){done('load');return
   cl.on('error',()=>{});
   cl.on('message',(topic,buf)=>{let m=null;const raw=String(buf);
    if(topic===MQ_T+'/bye'){mqGone(raw);return;}
+   if(topic.indexOf(MQ_T+'/party/')===0){try{partyMsg(topic.slice(MQ_T.length+7),raw);}catch(e){}return;}
    if(topic.indexOf(MQ_T+'/cand/')===0||topic.indexOf(MQ_T+'/vote/')===0){try{mayorMsg(topic,raw);}catch(e){}return;}
    if(topic.indexOf(MQ_T+'/rq/')===0){const id=topic.slice(MQ_T.length+4);if(!raw){delete RQ[id];}else{try{const o=JSON.parse(raw);if(o&&typeof o.t==='string')RQ[id]={n:String(o.n||'חבר').slice(0,20),t:o.t.slice(0,200),at:+o.at||0};}catch(e){}}return;}
    try{m=JSON.parse(raw);}catch(e){return;}if(!m||typeof m!=='object')return;
@@ -1245,7 +1246,7 @@ function netMqtt(done){netLeave(true);netLoadMq(ok=>{if(!ok){done('load');return
    if(topic===MQ_T+'/p'){const st=m.s;if(!st||typeof st.sid!=='string'||st.sid===SID||st.sid.length>20)return;NET.states[st.sid]=st;NET.seen[st.sid]=Date.now();NET.dirty=true;}
    else if(topic===MQ_T+'/e'){if(m.f===SID||typeof m.k!=='string')return;netDeliver(m.k,m.d);}});
   cl.on('connect',()=>{if(opened)return;opened=true;clearTimeout(to);
-   cl.subscribe([MQ_T+'/p',MQ_T+'/e',MQ_T+'/bye',MQ_T+'/w/+',MQ_T+'/cand/+',MQ_T+'/vote/+'],{qos:0});
+   cl.subscribe([MQ_T+'/p',MQ_T+'/e',MQ_T+'/bye',MQ_T+'/w/+',MQ_T+'/cand/+',MQ_T+'/vote/+',MQ_T+'/party/+'],{qos:0});
    NET.mq=cl;NET.mode='mqtt';NET.states={};NET.seen={};NET.dirty=true;
    clearInterval(NET.mqiv);NET.mqiv=setInterval(()=>{const now=Date.now();for(const k in NET.seen){if(now-NET.seen[k]>6000)mqGone(k);}
     if(!NET.dirty)return;NET.dirty=false;if(NET.peersCb){try{NET.peersCb(Object.keys(NET.states).map(k=>NET.states[k]));}catch(e){}}},150);
@@ -1480,6 +1481,40 @@ function petShopInit(){if(petsOK)return;petsOK=true;
  I.acts.push({x:I.ox,z:I.oz-2.2,r:3.4,label:'🐾 קנה חיית מחמד',run:()=>petMenu()});
  POIS.push({n:'חיות מחמד',x:-4,z:-49,c:'#8f8'});}
 try{petShopInit();}catch(e){console.error('petShop',e);}
+
+/* ---------- house parties ---------- */
+const PARTY={},PANN={};let partyDeco=null,partyBtn=null;
+const PARTY_MS=20*60000;
+function partyMsg(id,raw){if(!raw){delete PARTY[id];return;}let o=null;try{o=JSON.parse(raw);}catch(e){return;}if(!o||typeof o!=='object'||typeof o.ci!=='number')return;
+ PARTY[id]={n:String(o.n||'חבר').slice(0,16),ci:o.ci|0,at:+o.at||0,until:+o.until||0};
+ if(id!==mayorPid()&&!PANN[id+PARTY[id].at]&&Date.now()-PARTY[id].at<120000&&PARTY[id].until>Date.now()){PANN[id+PARTY[id].at]=1;try{toast('🎉 '+PARTY[id].n+' עושה מסיבה בבית שלו! בואו לרקוד 💃🕺');}catch(e){}}}
+function partyActive(id){const p=PARTY[id];return p&&p.until>Date.now();}
+function myPartyOn(){return partyActive(mayorPid());}
+function partyToggle(){const me_=mayorPid();
+ if(myPartyOn()){if(rPub('/party/'+me_,null)){delete PARTY[me_];toast('🎊 המסיבה הסתיימה');}else toast('אין חיבור לשרת');return;}
+ const o={n:S.nick||'שחקן',ci:S.home,at:Date.now(),until:Date.now()+PARTY_MS};
+ if(rPub('/party/'+me_,o)){PARTY[me_]=o;PANN[me_+o.at]=1;toast('🎉 המסיבה התחילה! כל העיר קיבלה הודעה (20 דקות)');}else toast('אין חיבור לשרת – נסו שוב');}
+function partyRooms(ci){return ['house'+ci,'house'+ci+'u'];}
+function inPartyHouse(av){for(const id in PARTY){if(!partyActive(id))continue;for(const r of partyRooms(PARTY[id].ci)){const I=INT[r];if(I&&Math.abs(av.position.x-I.ox)<I.w/2&&Math.abs(av.position.z-I.oz)<I.d/2)return true;}}return false;}
+const _anim0=animAv;
+animAv=function(av,spd,t,mode){_anim0(av,spd,t,mode);try{if(mode!=='swim'&&mode!=='ride'&&av.position.x>900&&inPartyHouse(av)){const u=av.userData,s=Math.sin(t*6),c=Math.cos(t*6);
+ u.armL.rotation.x=-2.5+s*.5;u.armR.rotation.x=-2.5-s*.5;u.armL.rotation.z=.3+c*.2;u.armR.rotation.z=-.3-c*.2;u.legL.rotation.x=s*.5;u.legR.rotation.x=-s*.5;u.body.position.y=Math.abs(s)*.12;u.body.rotation.y=Math.sin(t*3)*.5;}}catch(e){}};
+function partyTick(){try{if(typeof me==='undefined'||!me)return;
+ // own-house party button
+ if(place==='house'+S.home&&INT[place]&&!INT[place].partyAct){const I=INT[place];I.partyAct=1;I.acts.push({x:I.ox,z:I.oz-1,r:2.8,label:'🎉 מסיבה בבית (התחל / סיים)',run:()=>partyToggle()});}
+ // deco lights in a party room
+ const live=Object.keys(PARTY).find(id=>partyActive(id));
+ if(!partyDeco){partyDeco=[];}
+ const want={};Object.keys(PARTY).forEach(id=>{if(partyActive(id))partyRooms(PARTY[id].ci).forEach(r=>{want[r]=1;});});
+ Object.keys(want).forEach(r=>{const I=INT[r];if(I&&I.g&&!I.disco){const dg=new THREE.Group();dg.position.set(0,I.h-1.2,0);I.g.add(dg);const cols=[0xff3a8a,0x3affc8,0xffd23a,0x6a8aff];for(let i=0;i<6;i++){const sp=sph(.22,new THREE.MeshStandardMaterial({color:cols[i%4],emissive:cols[i%4],emissiveIntensity:1.2}),Math.cos(i)*I.w*.28,0,Math.sin(i*1.7)*I.d*.28,dg);}I.disco=dg;}});
+ for(const r in INT){const I=INT[r];if(I&&I.disco){if(!want[r]){if(I.g)I.g.remove(I.disco);I.disco=null;}else{I.disco.rotation.y+=.04;I.disco.children.forEach((c,i)=>{c.position.y=Math.sin(Date.now()/250+i)*.3;});}}}
+ // banner to join
+ const others=Object.keys(PARTY).filter(id=>id!==mayorPid()&&partyActive(id));
+ if(!partyBtn){partyBtn=document.createElement('button');partyBtn.className='btn';partyBtn.style.cssText='position:fixed;z-index:44;top:92px;left:50%;transform:translateX(-50%);display:none;font-size:16px;font-weight:700;padding:10px 14px;border-radius:16px;background:#c2185b;color:#fff;border:2px solid #fff';document.body.appendChild(partyBtn);
+  partyBtn.onclick=()=>{const id=Object.keys(PARTY).find(x=>x!==mayorPid()&&partyActive(x));if(!id)return;const H=HOMES[PARTY[id].ci];if(!H||!H.out)return;if(place!=='out')leave();P.x=H.out.x;P.z=H.out.z;P.vx=P.vz=0;toast('🎉 הגעת למסיבה של '+PARTY[id].n+' – היכנסו לבית!');};}
+ if(others.length&&place==='out'&&!PASS.sid){partyBtn.textContent='🎉 מסיבה אצל '+PARTY[others[0]].n+' – לחצו להגיע!';partyBtn.style.display='block';}else partyBtn.style.display='none';
+}catch(e){}}
+setInterval(partyTick,500);
 </script>
 <script>
 /* ---------- preview, real estate, registration, own shops ---------- */
