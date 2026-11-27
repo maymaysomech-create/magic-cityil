@@ -98,7 +98,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0b0a14;font-family:sy
   <div id="chars" style="display:none"></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>const BUILD="1795759716";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
+<script>const BUILD="1795789169";(function(){if(!/^https?:/.test(location.protocol))return;let shown=false;function chk(first){fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const BUILD="(\d+)"/);if(!m||m[1]===BUILD)return;if(first&&location.search.indexOf("v="+m[1])<0){location.replace(location.pathname+"?v="+m[1]);return;}if(shown)return;shown=true;const d=document.createElement("div");d.style.cssText="position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:70;background:#0b6e3a;border:2px solid #9fffbf;border-radius:16px;padding:10px 14px;color:#fff;font:700 16px system-ui,Arial;display:flex;gap:10px;align-items:center;direction:rtl";d.innerHTML="<span>🆕 יש גרסה חדשה של המשחק</span>";const b=document.createElement("button");b.textContent="רענן";b.style.cssText="padding:8px 14px;font-size:16px;border-radius:10px;border:0;font-weight:700";b.onclick=()=>location.replace(location.pathname+"?v="+m[1]);d.appendChild(b);document.body.appendChild(d);}).catch(()=>{});}chk(true);setInterval(()=>chk(false),90000);})();</script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -869,6 +869,7 @@ function begin(){me=makeAvatar(lookOf(),S);scene.add(me);
   if(S.tier===2){const oT=TIERS[2],nT=TIERS[0];if(S.placed&&S.placed.length){const fx=nT.iw/oT.iw,fz=nT.ind/oT.ind;S.placed.forEach(p=>{p.x=+(p.x*fx).toFixed(2);p.z=+(p.z*fz).toFixed(2);p.fl=0;});}
    S.tier=0;S.md='classic';S.home=-1;}
   S.deeds=(Array.isArray(S.deeds)?S.deeds:[0]).filter(d=>d!==2);if(!S.deeds.includes(0))S.deeds.push(0);saveSoon();}}catch(e){}
+ try{const nk2=String(S.nick||'');if(!S.fx2&&nk2.indexOf('המלך')>=0&&nk2.indexOf('יואב')>=0){S.fx2=1;S.money+=100;saveSoon();}}catch(e){}
  normalizeHome();buildPlot(S.home);const ho=HOMES[S.home].out;P.x=(S.pos&&isFinite(S.pos.x))?S.pos.x:ho.x;P.z=(S.pos&&isFinite(S.pos.z))?S.pos.z:ho.z;P.ry=Math.PI;cam.yaw=0;
  setRide();updHud();$('splash').style.display='none';started=true;setupRoom();setupChat();pubHouse();pubShop();worldInit();try{buildShopPlots();}catch(e){}try{if(typeof netAuto==='function')setTimeout(netAuto,1500);}catch(e){}
  setInterval(save,15000);addEventListener('visibilitychange',()=>{if(document.hidden)save();});addEventListener('pagehide',save);
@@ -1237,13 +1238,14 @@ function netMqtt(done){netLeave(true);netLoadMq(ok=>{if(!ok){done('load');return
   cl.on('error',()=>{});
   cl.on('message',(topic,buf)=>{let m=null;const raw=String(buf);
    if(topic===MQ_T+'/bye'){mqGone(raw);return;}
+   if(topic.indexOf(MQ_T+'/cand/')===0||topic.indexOf(MQ_T+'/vote/')===0){try{mayorMsg(topic,raw);}catch(e){}return;}
    if(topic.indexOf(MQ_T+'/rq/')===0){const id=topic.slice(MQ_T.length+4);if(!raw){delete RQ[id];}else{try{const o=JSON.parse(raw);if(o&&typeof o.t==='string')RQ[id]={n:String(o.n||'חבר').slice(0,20),t:o.t.slice(0,200),at:+o.at||0};}catch(e){}}return;}
    try{m=JSON.parse(raw);}catch(e){return;}if(!m||typeof m!=='object')return;
    if(topic.indexOf(MQ_T+'/w/')===0){netWorldMsg(topic.slice(MQ_T.length+3),m);return;}
    if(topic===MQ_T+'/p'){const st=m.s;if(!st||typeof st.sid!=='string'||st.sid===SID||st.sid.length>20)return;NET.states[st.sid]=st;NET.seen[st.sid]=Date.now();NET.dirty=true;}
    else if(topic===MQ_T+'/e'){if(m.f===SID||typeof m.k!=='string')return;netDeliver(m.k,m.d);}});
   cl.on('connect',()=>{if(opened)return;opened=true;clearTimeout(to);
-   cl.subscribe([MQ_T+'/p',MQ_T+'/e',MQ_T+'/bye',MQ_T+'/w/+'],{qos:0});
+   cl.subscribe([MQ_T+'/p',MQ_T+'/e',MQ_T+'/bye',MQ_T+'/w/+',MQ_T+'/cand/+',MQ_T+'/vote/+'],{qos:0});
    NET.mq=cl;NET.mode='mqtt';NET.states={};NET.seen={};NET.dirty=true;
    clearInterval(NET.mqiv);NET.mqiv=setInterval(()=>{const now=Date.now();for(const k in NET.seen){if(now-NET.seen[k]>6000)mqGone(k);}
     if(!NET.dirty)return;NET.dirty=false;if(NET.peersCb){try{NET.peersCb(Object.keys(NET.states).map(k=>NET.states[k]));}catch(e){}}},150);
@@ -1379,6 +1381,68 @@ window.BRK=false;
   lastRide=P.riding;
   if(!shown&&S.parked&&!P.riding&&typeof scene!=='undefined'){shown=true;parkShow();}
  }catch(e){}},300);
+})();
+
+/* ---------- city hall + mayor election ---------- */
+const CAND={},VOTE={};let mayorSprite=null,mayorShown='';
+function mayorMsg(topic,raw){const isC=topic.indexOf(MQ_T+'/cand/')===0;const id=topic.slice(MQ_T.length+(isC?6:6));const M_=isC?CAND:VOTE;
+ if(!raw){delete M_[id];return;}let o=null;try{o=JSON.parse(raw);}catch(e){return;}if(!o||typeof o!=='object')return;
+ if(isC)M_[id]={n:String(o.n||'מועמד').slice(0,16),s:String(o.s||'').slice(0,60),a:String(o.a||'').slice(0,100),at:+o.at||0};
+ else if(typeof o.c==='string')M_[id]={c:o.c.slice(0,24),at:+o.at||0};}
+function mayorPid(){return S.pid||SID;}
+function mayorTally(){const t={};Object.keys(VOTE).forEach(v=>{const c=VOTE[v].c;if(CAND[c])t[c]=(t[c]||0)+1;});return t;}
+function mayorNow(){const t=mayorTally();let best=null;Object.keys(t).forEach(c=>{if(!best||t[c]>t[best]||(t[c]===t[best]&&CAND[c].at<CAND[best].at))best=c;});return best;}
+function rPub(sub,obj){const c=NET.mq;if(!c||!c.connected)return false;try{c.publish(MQ_T+sub,obj==null?'':JSON.stringify(obj),{qos:1,retain:true});return true;}catch(e){return false;}}
+let hallOK=false;
+function hallDesk(){if(hallOK)return;const I=INT.hall;if(!I||!I.g)return;hallOK=true;const g=I.g;
+ box(4.4,1,1.6,M(0x4a2a14),5,.5,-2.6,g);box(4.6,.12,1.8,M(0x7a4a24),5,1.02,-2.6,g);
+ const n=npc(g,NPCS.off,5,-3.6,0);n.scale.setScalar(1.05);
+ box(1.8,.3,.9,M(0xc8a030),5,1.2,-2.6,g);
+ I.acts.push({x:I.ox+5,z:I.oz-.8,r:3,label:'👑 לשכת ראש העיר – בחירות',run:()=>cityMenu()});}
+setInterval(()=>{try{hallDesk();}catch(e){}},1500);
+function mayorRefresh(){try{const m=mayorNow();const txt=m?('👑 ראש העיר: '+CAND[m].n):'אין ראש עיר עדיין';if(txt===mayorShown&&mayorSprite)return;mayorShown=txt;
+  if(mayorSprite){if(mayorSprite.parent)mayorSprite.parent.remove(mayorSprite);mayorSprite=null;}mayorSprite=labelSprite(txt,m?'#ffd978':'#bbb');mayorSprite.position.set(5,3.3,-3.6);if(INT.hall&&INT.hall.g)INT.hall.g.add(mayorSprite);}catch(e){}}
+setInterval(mayorRefresh,2000);
+function cityMenu(){
+ const me_=mayorPid(),t=mayorTally(),mayor=mayorNow(),mine=VOTE[me_]&&VOTE[me_].c;
+ const nodes=[h('div',{style:'text-align:center;font-size:18px;margin-bottom:6px;color:#ffd978;font-weight:700'},[mayor?('👑 ראש העיר: '+CAND[mayor].n):'אין ראש עיר – הציגו מועמדות!'])];
+ if(mayor&&CAND[mayor].a)nodes.push(h('div',{style:'background:rgba(255,255,255,.1);border-radius:12px;padding:8px;margin-bottom:8px'},['📢 '+CAND[mayor].a]));
+ const ids=Object.keys(CAND).sort((a,b)=>(t[b]||0)-(t[a]||0));
+ nodes.push(h('div',{style:'font-weight:700;margin:6px 0'},['🗳️ מועמדים ('+ids.length+')']));
+ if(!ids.length)nodes.push(h('div',{style:'opacity:.8'},['עדיין אין מועמדים.']));
+ ids.forEach(id=>{const c=CAND[id];nodes.push(row(c.n+(c.s?' – '+c.s:'')+' · '+(t[id]||0)+' קולות'+(id===mine?' ✅':''),id===mine?'הקול שלך':'הצבע',()=>{if(rPub('/vote/'+me_,{c:id,at:Date.now()})){VOTE[me_]={c:id,at:Date.now()};toast('🗳️ הצבעת ל'+c.n);cityMenu();}else toast('אין חיבור לשרת, נסו שוב');},id===mine));});
+ const inp=h('input',{type:'text',maxlength:'60',placeholder:CAND[me_]?'סיסמת בחירות':'סיסמת בחירות (למשל: ממש כיף איתי!)',value:(CAND[me_]&&CAND[me_].s)||'',style:'width:100%;box-sizing:border-box;padding:10px;border-radius:12px;border:1px solid #ffd97899;background:rgba(255,255,255,.1);color:#fff;font-size:16px;direction:rtl;margin-top:10px'});
+ inp.addEventListener('keydown',e=>e.stopPropagation());inp.addEventListener('keyup',e=>e.stopPropagation());nodes.push(inp);
+ nodes.push(h('button',{class:'btn',style:'width:100%;margin-top:6px;padding:11px;font-size:16px',on:()=>{const o=Object.assign({n:S.nick||'שחקן',a:(CAND[me_]&&CAND[me_].a)||'',at:(CAND[me_]&&CAND[me_].at)||Date.now()},{s:(inp.value||'').trim().slice(0,60)});if(rPub('/cand/'+me_,o)){CAND[me_]=o;toast('🙋 את/ה מועמד/ת!');cityMenu();}else toast('אין חיבור לשרת, נסו שוב');}},[CAND[me_]?'💾 עדכן מועמדות':'🙋 הציגו מועמדות']));
+ if(CAND[me_])nodes.push(h('button',{class:'btn',style:'width:100%;margin-top:6px;padding:9px',on:()=>{rPub('/cand/'+me_,null);delete CAND[me_];cityMenu();}},['↩ משוך מועמדות']));
+ if(mayor===me_){
+  const an=h('input',{type:'text',maxlength:'100',placeholder:'הודעה לכל העיר',value:CAND[me_].a||'',style:'width:100%;box-sizing:border-box;padding:10px;border-radius:12px;border:1px solid #ffd97899;background:rgba(255,255,255,.1);color:#fff;font-size:16px;direction:rtl;margin-top:12px'});
+  an.addEventListener('keydown',e=>e.stopPropagation());an.addEventListener('keyup',e=>e.stopPropagation());nodes.push(h('div',{style:'margin-top:12px;font-weight:700;color:#ffd978'},['👑 את/ה ראש העיר!']));nodes.push(an);
+  nodes.push(h('button',{class:'btn',style:'width:100%;margin-top:6px;padding:11px',on:()=>{const o=Object.assign({},CAND[me_],{a:(an.value||'').trim().slice(0,100)});if(rPub('/cand/'+me_,o)){CAND[me_]=o;toast('📢 ההודעה פורסמה');cityMenu();}}},['📢 פרסם הודעה לעיר']));
+  const ok=!S.mayorT||Date.now()-S.mayorT>20*60000;
+  nodes.push(h('button',{class:'btn',style:'width:100%;margin-top:6px;padding:11px;'+(ok?'':'opacity:.5'),on:()=>{if(!ok){toast('המשכורת הבאה בעוד כמה דקות');return;}S.mayorT=Date.now();money(50,'משכורת ראש העיר 👑');cityMenu();}},['💰 משכורת ראש העיר – ₪50 (כל 20 דקות)']));}
+ openPanel('🏛️ בניין העירייה',nodes);}
+
+/* ---------- passengers in other players' cars ---------- */
+const PASS={sid:null};
+(function(){
+ const mk=(id,txt,css)=>{const b=document.createElement('button');b.id=id;b.className='btn';b.textContent=txt;b.style.cssText='position:fixed;z-index:45;display:none;font-size:18px;font-weight:700;padding:12px 16px;border-radius:16px;color:#fff;border:2px solid #fff;'+css;document.body.appendChild(b);return b;};
+ const on=mk('passBtn','🚗 עלה כנוסע','left:50%;transform:translateX(-50%);bottom:210px;background:#2a9d4a'),off=mk('unpassBtn','🚪 רד מהרכב','left:50%;transform:translateX(-50%);bottom:210px;background:#c0262d');
+ function seatOf(){let h=0;for(let i=0;i<SID.length;i++)h=(h*31+SID.charCodeAt(i))|0;return Math.abs(h)%3;}
+ function near(){let best=null,bd=6;for(const k in peers){const o=peers[k],s=o.st;if(!s||!s.veh||!BYID[s.veh]||BYID[s.veh].fly||s.veh==='v_broom')continue;const d=Math.hypot(o.av.position.x-P.x,o.av.position.z-P.z);if(d<bd){bd=d;best=k;}}return best;}
+ function drop(msg){if(!PASS.sid)return;PASS.sid=null;if(P.freeze==='pass')P.freeze=null;P.y=0;if(msg)toast(msg);}
+ on.onclick=()=>{const k=near();if(!k||P.riding)return;PASS.sid=k;P.freeze='pass';toast('🚗 את/ה נוסע/ת ברכב של '+(peers[k].st.nick||'חבר'));};
+ off.onclick=()=>{const o=peers[PASS.sid];if(o){P.x=o.av.position.x+2.6;P.z=o.av.position.z;}drop('ירדת מהרכב');};
+ setInterval(()=>{try{
+  if(typeof me==='undefined'||!me)return;
+  if(PASS.sid){const o=peers[PASS.sid];
+   if(!o||!o.st.veh||BYID[o.st.veh]&&BYID[o.st.veh].fly||place!=='out'||P.riding){drop(o?'הנהג ירד מהרכב':'הנהג עזב');}
+   else{const a=o.av.position,ry=o.av.rotation.y,sd=seatOf(),rx=Math.cos(ry),rz=-Math.sin(ry),fx=Math.sin(ry),fz=Math.cos(ry);
+    const side=sd===0?.65:(sd===1?-.65:.65),back=sd===2?-1.5:-.2;
+    P.x=a.x+rx*side+fx*back;P.z=a.z+rz*side+fz*back;P.ry=ry;P.vx=P.vz=0;P.y=.3;P.freeze='pass';}}
+  on.style.display=(!PASS.sid&&!P.riding&&place==='out'&&near())?'block':'none';
+  off.style.display=PASS.sid?'block':'none';
+ }catch(e){}},40);
 })();
 </script>
 <script>
